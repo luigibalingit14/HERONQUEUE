@@ -1,0 +1,393 @@
+/* =============================================================
+   UMak CIC Design System — Shared Theme Tokens
+   Light and Dark mode color tokens + toggle component.
+   Linked from all HTML sample files.
+   ============================================================= */
+
+/* ─── Light Mode (default) ────────────────────────────────────── */
+:root {
+  /* Brand */
+  --primary:          #111c4e;
+  --primary-80:       #28336b;
+  --primary-60:       #47528a;
+  --primary-20:       #060e33;
+  --primary-10:       #01061c;
+
+  /* Accent */
+  --secondary:        #f5ec3a;
+  --secondary-mid:    #fef760;
+  --secondary-light:  #fff989;
+
+  /* Informational */
+  --tertiary:         #105389;
+  --tertiary-10:      #c0d5f0;
+  --tertiary-30:      #8bb0dc;
+  --tertiary-50:      #406fa5;
+  --tertiary-70:      #275996;
+
+  /* Surface & Neutral */
+  --neutral:          #ffffff;
+  --surface:          #f5f6fa;
+  --surface-variant:  #eaecf4;
+  --on-surface:       #111c4e;
+  --on-surface-variant: #47528a;
+
+  /* Semantic */
+  --error:            #c0392b;
+  --error-light:      #fdecea;
+  --success:          #1a7a4a;
+  --success-light:    #e6f5ed;
+  --warning:          #b8860b;
+  --warning-light:    #fffbea;
+
+  /* Text */
+  --text-primary:     #222222;
+  --text-secondary:   #47528a;
+  --text-muted:       #7c85a8;
+  --text-disabled:    #b0b8d4;
+  --text-on-primary:  #ffffff;
+  --text-on-secondary:#111c4e;
+
+  /* Borders */
+  --border:           #d0d5e8;
+  --border-focus:     #105389;
+  --divider:          #e4e8f4;
+
+  /* Spacing */
+  --space-xs:  4px;
+  --space-sm:  8px;
+  --space-md:  16px;
+  --space-lg:  24px;
+  --space-xl:  32px;
+  --space-2xl: 48px;
+  --space-3xl: 64px;
+
+  /* Radius */
+  --radius-sm:   2px;
+  --radius-md:   4px;
+  --radius-lg:   8px;
+  --radius-xl:   12px;
+  --radius-full: 9999px;
+
+  /* Theme toggle */
+  --toggle-bg:        #ffffff;
+  --toggle-border:    #d0d5e8;
+  --toggle-shadow:    rgba(17, 28, 78, 0.12);
+  --toggle-hover-bg:  #f5f6fa;
+  --toggle-icon:      #111c4e;
+}
+
+/* ─── Dark Mode ───────────────────────────────────────────────── */
+/*
+   Strategy: brand colors (primary, secondary) are unchanged so
+   navbars and CTAs remain recognisably UMak. Surface and text
+   tokens are inverted to a deep-navy dark palette.
+*/
+:root[data-theme="dark"] {
+  /* Surface & Neutral (inverted) */
+  --neutral:          #1a1f35;   /* card / modal backgrounds */
+  --surface:          #0d1020;   /* page background */
+  --surface-variant:  #252b45;   /* chip, alt-row, hover */
+  --on-surface:       #c8cde8;
+  --on-surface-variant: #9aa2c8;
+
+  /* Text (inverted) */
+  --text-primary:     #e8eaf2;
+  --text-secondary:   #9aa2c8;
+  --text-muted:       #6b7499;
+  --text-disabled:    #3d4463;
+  --text-on-primary:  #ffffff;   /* stays white on navy */
+  --text-on-secondary:#111c4e;   /* stays navy on yellow */
+
+  /* Borders */
+  --border:           #2e3556;
+  --border-focus:     #3a7fd4;
+  --divider:          #252b45;
+
+  /* Informational — lightened for legibility on dark bg */
+  --tertiary:         #3a7fd4;
+  --tertiary-10:      #1a2d4a;
+  --tertiary-30:      #1e3d65;
+  --tertiary-50:      #2a5585;
+  --tertiary-70:      #3068a5;
+
+  /* Semantic (dark backgrounds for tinted surfaces) */
+  --error:            #e05c4b;
+  --error-light:      #2d0a09;
+  --success:          #2ecc71;
+  --success-light:    #071f13;
+  --warning:          #d4a017;
+  --warning-light:    #1f1a03;
+
+  /* Theme toggle */
+  --toggle-bg:        #1a1f35;
+  --toggle-border:    #2e3556;
+  --toggle-shadow:    rgba(0, 0, 0, 0.4);
+  --toggle-hover-bg:  #252b45;
+  --toggle-icon:      #e8eaf2;
+}
+
+/* ─── Theme Toggle Button ─────────────────────────────────────── */
+.theme-toggle {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  z-index: 9999;
+  width: 44px;
+  height: 44px;
+  border-radius: var(--radius-full);
+  border: 1px solid var(--toggle-border);
+  background: var(--toggle-bg);
+  box-shadow: 0 2px 8px var(--toggle-shadow);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.2s, border-color 0.2s, box-shadow 0.2s;
+  outline-offset: 3px;
+}
+
+.theme-toggle:hover {
+  background: var(--toggle-hover-bg);
+  box-shadow: 0 4px 16px var(--toggle-shadow);
+}
+
+.theme-toggle:focus-visible {
+  outline: 2px solid var(--border-focus);
+}
+
+/* Show sun icon in dark mode, moon icon in light mode */
+.theme-toggle .icon-sun  { display: none; }
+.theme-toggle .icon-moon { display: block; }
+
+:root[data-theme="dark"] .theme-toggle .icon-sun  { display: block; }
+:root[data-theme="dark"] .theme-toggle .icon-moon { display: none; }
+
+.theme-toggle svg {
+  width: 20px;
+  height: 20px;
+  color: var(--toggle-icon);
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  flex-shrink: 0;
+}
+
+/* ─── Smooth theme transition ─────────────────────────────────── */
+/*
+   Applied via JS after initial load to prevent transition on
+   first paint (avoids FOUC flash during theme init).
+*/
+.theme-transitioning,
+.theme-transitioning *,
+.theme-transitioning *::before,
+.theme-transitioning *::after {
+  transition:
+    background-color 0.25s ease,
+    border-color     0.25s ease,
+    color            0.25s ease,
+    box-shadow       0.25s ease !important;
+}
+
+/* ─── Dark Mode: Component Contrast Fixes ─────────────────────── */
+/*
+   Several components hardcode var(--primary) (#111c4e) as their
+   text, input text, or border color. On dark backgrounds this
+   is effectively invisible. The overrides below restore legibility
+   across all four HTML samples (homepage, dashboard, form, forum).
+
+   Grouped by component type, then by page-specific classes.
+   Light mode is completely unaffected — all rules are scoped to
+   :root[data-theme="dark"].
+*/
+
+/* ── Buttons ─────────────────────────────────────────────────── */
+
+/* Secondary button: swap navy → accessible blue */
+:root[data-theme="dark"] .btn-secondary {
+  color: var(--tertiary);
+  border-color: var(--tertiary);
+}
+:root[data-theme="dark"] .btn-secondary:hover {
+  background: var(--surface-variant);
+  color: #ffffff;
+  border-color: #ffffff;
+}
+:root[data-theme="dark"] .btn-secondary:active {
+  background: var(--surface-variant);
+}
+
+/* Ghost button: swap navy → accessible blue */
+:root[data-theme="dark"] .btn-ghost {
+  color: var(--tertiary);
+}
+:root[data-theme="dark"] .btn-ghost:hover {
+  background: var(--surface-variant);
+  color: #ffffff;
+}
+
+/* ── Page & Section Titles ───────────────────────────────────── */
+
+/* H1 page titles (dashboard, form, forum) */
+:root[data-theme="dark"] .page-title {
+  color: var(--text-primary);
+}
+
+/* Section headings (homepage) */
+:root[data-theme="dark"] .section-title {
+  color: var(--text-primary);
+}
+
+/* ── Form Inputs ─────────────────────────────────────────────── */
+
+/* Field labels: swap navy → legible secondary text */
+:root[data-theme="dark"] .field-label {
+  color: var(--text-secondary);
+}
+
+/* Input typed text: navy becomes invisible on dark input bg */
+:root[data-theme="dark"] .field-input,
+:root[data-theme="dark"] .field-textarea,
+:root[data-theme="dark"] .field-select {
+  color: var(--text-primary);
+  background: var(--neutral);
+  border-color: var(--border);
+}
+:root[data-theme="dark"] .field-input:hover,
+:root[data-theme="dark"] .field-textarea:hover,
+:root[data-theme="dark"] .field-select:hover {
+  border-color: var(--text-muted);
+}
+:root[data-theme="dark"] .field-input:focus,
+:root[data-theme="dark"] .field-textarea:focus,
+:root[data-theme="dark"] .field-select:focus {
+  border-color: var(--border-focus);
+}
+:root[data-theme="dark"] .field-input:disabled,
+:root[data-theme="dark"] .field-textarea:disabled,
+:root[data-theme="dark"] .field-select:disabled {
+  background: var(--surface-variant);
+  color: var(--text-disabled);
+}
+
+/* ── Stat / Metric Numbers ───────────────────────────────────── */
+
+/* Dashboard big stat figures */
+:root[data-theme="dark"] .stat-value {
+  color: #ffffff;
+}
+
+/* Forum sidebar stat numbers */
+:root[data-theme="dark"] .stat-num {
+  color: var(--text-primary);
+}
+
+/* Homepage about-section stat values */
+:root[data-theme="dark"] .about-stat-value {
+  color: var(--text-primary);
+}
+
+/* ── Author / Name Labels ────────────────────────────────────── */
+
+/* Forum post, comment, reply author names */
+:root[data-theme="dark"] .post-author,
+:root[data-theme="dark"] .comment-author,
+:root[data-theme="dark"] .reply-author {
+  color: var(--text-primary);
+}
+
+/* ── Navigation & Tabs ───────────────────────────────────────── */
+
+/* Active tab indicator: bright text + yellow underline */
+:root[data-theme="dark"] .tab-item.active {
+  color: #ffffff;
+  border-bottom-color: var(--secondary);
+}
+:root[data-theme="dark"] .tab-item:hover {
+  color: var(--text-primary);
+}
+
+/* Forum sidebar category active item */
+:root[data-theme="dark"] .category-item.active {
+  background: var(--surface-variant);
+  color: var(--text-primary);
+}
+
+/* ── Card & Content Titles (Homepage) ───────────────────────── */
+
+:root[data-theme="dark"] .feature-title,
+:root[data-theme="dark"] .contact-intro-title,
+:root[data-theme="dark"] .contact-form-title {
+  color: var(--text-primary);
+}
+
+/* ── Interactive Icon Buttons (Dashboard) ───────────────────── */
+
+:root[data-theme="dark"] .icon-btn:hover {
+  background: var(--surface-variant);
+  color: var(--text-primary);
+}
+
+/* ── Navigation Bar ──────────────────────────────────────────── */
+/*
+   .nav-item and .nav-wordmark use var(--neutral) for text color.
+   In dark mode --neutral becomes #1a1f35 (dark navy) — invisible
+   against the unchanged var(--primary) navbar background.
+   Force these to stay white.
+*/
+:root[data-theme="dark"] .nav-item {
+  color: #ffffff;
+}
+:root[data-theme="dark"] .nav-item:hover,
+:root[data-theme="dark"] .nav-item--active {
+  color: var(--secondary);
+}
+:root[data-theme="dark"] .nav-wordmark {
+  color: #ffffff;
+}
+
+/* ── Hero Title ──────────────────────────────────────────────── */
+/*
+   .hero-title uses color: var(--neutral). In dark mode --neutral
+   becomes #1a1f35, invisible against the hero's dark gradient bg.
+   The hero background is always dark (hardcoded gradient), so
+   white text is correct in both modes.
+*/
+:root[data-theme="dark"] .hero-title {
+  color: #ffffff;
+}
+
+/* ── Feature Card Icons ──────────────────────────────────────── */
+/*
+   Feature icon SVGs have hardcoded stroke="#111c4e" (navy).
+   In dark mode the .feature-icon bg is --surface-variant (#252b45),
+   making the navy strokes invisible. Swap to text-primary.
+*/
+:root[data-theme="dark"] .feature-icon svg path,
+:root[data-theme="dark"] .feature-icon svg circle,
+:root[data-theme="dark"] .feature-icon svg rect {
+  stroke: var(--text-primary);
+}
+/* Keep the hover-state inversion intact */
+:root[data-theme="dark"] .feature-card:hover .feature-icon {
+  background: var(--primary);
+}
+:root[data-theme="dark"] .feature-card:hover .feature-icon svg path,
+:root[data-theme="dark"] .feature-card:hover .feature-icon svg circle,
+:root[data-theme="dark"] .feature-card:hover .feature-icon svg rect {
+  stroke: #ffffff;
+}
+
+/* ── Contact Detail Icons (Homepage) ────────────────────────── */
+/*
+   Location, phone, and email icons inside .contact-detail-icon
+   use hardcoded stroke="#111c4e". In dark mode the icon container
+   bg is --surface-variant, making them invisible. Swap to text-primary.
+*/
+:root[data-theme="dark"] .contact-detail-icon svg path,
+:root[data-theme="dark"] .contact-detail-icon svg circle,
+:root[data-theme="dark"] .contact-detail-icon svg rect {
+  stroke: var(--text-primary);
+}
