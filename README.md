@@ -31,7 +31,7 @@ fair ordering within each category.
 
 ## Key Features
 
-- **Student kiosk** - Join the Regular or Priority queue and receive a display code.
+- **Student kiosk** - Join the Regular queue or the Priority queue for PWDs, senior citizens, and other approved priority service, then receive a display code.
 - **Priority-based serving** - Priority tickets are called before Regular tickets.
 - **Fair tie-breaking** - Tickets with the same type are ordered by queue number,
   then UUID as a final deterministic tie-breaker.
