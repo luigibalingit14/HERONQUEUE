@@ -2,16 +2,22 @@ package com.umak.heronqueue.queue;
 
 import com.umak.heronqueue.ticket.Ticket;
 import com.umak.heronqueue.ticket.TicketType;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
+import java.time.Duration;
+import java.time.Instant;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
@@ -33,6 +39,8 @@ import org.springframework.web.server.ResponseStatusException;
 public class QueueController {
 
     private final QueueManager queueManager;
+    private final Map<String, Instant> lastJoinTimes = new ConcurrentHashMap<>();
+    private final Map<String, Instant> lastNextTimes = new ConcurrentHashMap<>();
 
     public QueueController(QueueManager queueManager) {
         this.queueManager = queueManager;
@@ -40,13 +48,27 @@ public class QueueController {
 
     /**
      * Accepts a ticket request and returns its generated display information.
+     * Includes a rate-limit check per client to prevent spamming ticket generation.
      *
      * <p>Validation rejects a missing enum value before the manager inserts the
      * ticket. Queue insertion is O(log n), excluding persistence work.</p>
      */
     @PostMapping("/join")
     @ResponseStatus(HttpStatus.CREATED)
-    public TicketResponse join(@Valid @RequestBody JoinQueueRequest request) {
+    public TicketResponse join(
+            @Valid @RequestBody JoinQueueRequest request,
+            @RequestHeader(value = "X-Client-Id", required = false) String clientId,
+            HttpServletRequest httpRequest) {
+        String key = resolveClientKey(clientId, httpRequest);
+        Instant now = Instant.now();
+        Instant lastJoin = lastJoinTimes.get(key);
+        if (lastJoin != null && Duration.between(lastJoin, now).toMillis() < 3000) {
+            throw new ResponseStatusException(
+                    HttpStatus.TOO_MANY_REQUESTS, "Please wait before requesting another ticket.");
+        }
+        lastJoinTimes.put(key, now);
+        cleanOldEntries(lastJoinTimes, now.minusSeconds(60));
+
         // Kiosk sends REGULAR or PRIORITY; QueueManager handles numbering and ordering.
         // @RequestBody ang nagko-convert ng JSON mula sa browser papunta sa Java record.
         return TicketResponse.from(queueManager.addTicket(request.ticketType()));
@@ -54,12 +76,26 @@ public class QueueController {
 
     /**
      * Calls the next ticket selected by the priority-queue comparator.
+     * Throttles consecutive rapid calls from the same staff client to prevent
+     * skipping tickets accidentally.
      *
      * <p>Heap removal is O(log n); an empty queue is represented by HTTP 204
      * through a {@link ResponseStatusException}.</p>
      */
     @PostMapping("/next")
-    public TicketResponse next() {
+    public TicketResponse next(
+            @RequestHeader(value = "X-Client-Id", required = false) String clientId,
+            HttpServletRequest httpRequest) {
+        String key = resolveClientKey(clientId, httpRequest);
+        Instant now = Instant.now();
+        Instant lastNext = lastNextTimes.get(key);
+        if (lastNext != null && Duration.between(lastNext, now).toMillis() < 1500) {
+            throw new ResponseStatusException(
+                    HttpStatus.TOO_MANY_REQUESTS, "Please wait before calling another ticket.");
+        }
+        lastNextTimes.put(key, now);
+        cleanOldEntries(lastNextTimes, now.minusSeconds(60));
+
         // Staff uses this endpoint to remove the next ticket from the PriorityQueue.
         return queueManager.pollNext()
                 .map(TicketResponse::from)
@@ -119,6 +155,26 @@ public class QueueController {
     @GetMapping("/history")
     public List<TicketResponse> history() {
         return queueManager.getHistory().stream().map(TicketResponse::from).toList();
+    }
+
+    private String resolveClientKey(String clientId, HttpServletRequest httpRequest) {
+        if (clientId != null && !clientId.isBlank()) {
+            return clientId.trim();
+        }
+        if (httpRequest != null) {
+            String forwarded = httpRequest.getHeader("X-Forwarded-For");
+            if (forwarded != null && !forwarded.isBlank()) {
+                return forwarded.split(",")[0].trim();
+            }
+            return httpRequest.getRemoteAddr();
+        }
+        return "unknown";
+    }
+
+    private void cleanOldEntries(Map<String, Instant> map, Instant cutoff) {
+        if (map.size() > 500) {
+            map.entrySet().removeIf(entry -> entry.getValue().isBefore(cutoff));
+        }
     }
 
     /**

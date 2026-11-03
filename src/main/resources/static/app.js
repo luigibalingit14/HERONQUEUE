@@ -1,7 +1,27 @@
 const API_BASE = '/api/queue';
 let joiningQueue = false;
+let callingNext = false;
+let staffActionBusy = false;
 
 // Iisang API helper ang ginagamit ng kiosk, staff dashboard, at public monitor.
+
+/**
+ * Generates or retrieves a persistent client ID for this browser.
+ * Used by backend rate limiters to prevent accidental rapid submissions
+ * from the same device without affecting other users on shared networks.
+ */
+function getClientId() {
+  try {
+    let id = localStorage.getItem('heronqueue_client_id');
+    if (!id) {
+      id = 'client_' + Math.random().toString(36).substring(2, 11) + '_' + Date.now().toString(36);
+      localStorage.setItem('heronqueue_client_id', id);
+    }
+    return id;
+  } catch (e) {
+    return 'anonymous_client';
+  }
+}
 
 /**
  * Displays short-lived feedback without interrupting the current page.
@@ -21,15 +41,30 @@ function showToast(message) {
  * rejected Promises so each caller can show page-specific feedback.
  */
 async function request(path, options = {}) {
+  const headers = {
+    'Content-Type': 'application/json',
+    'X-Client-Id': getClientId(),
+    ...(options.headers || {})
+  };
+
   // Ipadala ang request sa Spring Boot API; dito rin hinahawakan ang HTTP errors.
   const response = await fetch(`${API_BASE}${path}`, {
-    headers: { 'Content-Type': 'application/json' },
     cache: 'no-store',
-    ...options
+    ...options,
+    headers
   });
+
   if (!response.ok) {
     const body = await response.text();
-    throw new Error(body || `Request failed (${response.status})`);
+    let message = body;
+    try {
+      const parsed = JSON.parse(body);
+      message = parsed.message || parsed.detail || body;
+    } catch (_) {}
+
+    const err = new Error(message || `Request failed (${response.status})`);
+    err.status = response.status;
+    throw err;
   }
   return response.status === 204 ? null : response.json();
 }
@@ -59,6 +94,7 @@ function startRefreshLoop(refresh, interval) {
 /**
  * Joins a selected queue, renders the generated ticket, and calculates
  * position from the server's priority-ordered waiting array.
+ * Includes immediate anti-spam locking and persistent cooldown protection.
  */
 async function joinQueue(ticketType) {
   if (joiningQueue) return;
@@ -73,27 +109,51 @@ async function joinQueue(ticketType) {
       body: JSON.stringify({ ticketType })
     });
     ticketCreated = true;
-    document.querySelector('#ticketCode').textContent = ticket.displayCode;
-    document.querySelector('#ticketType').textContent = `${ticket.ticketType} QUEUE`;
+
+    const ticketCodeEl = document.querySelector('#ticketCode');
+    const ticketTypeEl = document.querySelector('#ticketType');
+    if (ticketCodeEl) ticketCodeEl.textContent = ticket.displayCode;
+    if (ticketTypeEl) ticketTypeEl.textContent = `${ticket.ticketType} QUEUE`;
+
+    // Highlight the ticket card visually to signal clear completion
+    const ticketOutput = document.querySelector('.ticket-output');
+    if (ticketOutput) {
+      ticketOutput.classList.remove('issued');
+      void ticketOutput.offsetWidth; // Trigger reflow to restart animation
+      ticketOutput.classList.add('issued');
+    }
+
     // The second awaited API call ensures the position uses current server data.
     const status = await request('/status');
     const ahead = status.waiting.findIndex((item) => item.id === ticket.id);
-    document.querySelector('#peopleAhead').textContent = Math.max(ahead, 0);
-    showToast('Your place is secured. Please watch the display.');
+    const aheadEl = document.querySelector('#peopleAhead');
+    if (aheadEl) aheadEl.textContent = Math.max(ahead, 0);
+
+    showToast('Your place is secured. Please take note of your number.');
   } catch (error) {
-    showToast(ticketCreated
-      ? 'Ticket created, but queue position could not be refreshed.'
-      : 'Unable to join the queue right now. Please try again.');
+    if (error.status === 429) {
+      showToast('Please wait a moment before requesting another ticket.');
+    } else {
+      showToast(ticketCreated
+        ? 'Ticket created, but queue position could not be refreshed.'
+        : 'Unable to join the queue right now. Please try again.');
+    }
     console.error(error);
   } finally {
     if (ticketCreated) {
-      await coolDownQueueButtons(5);
+      await coolDownQueueButtons(6);
+    } else {
+      // Short delay on failure to avoid rapid button mashing
+      await new Promise((resolve) => window.setTimeout(resolve, 2000));
+      joiningQueue = false;
+      setQueueButtonsLoading(false);
     }
-    joiningQueue = false;
-    setQueueButtonsLoading(false);
   }
 }
 
+/**
+ * Counts down and disables kiosk buttons, persisting across accidental page reloads.
+ */
 async function coolDownQueueButtons(seconds) {
   const buttons = [...document.querySelectorAll('[data-ticket-type]')];
   buttons.forEach((button) => {
@@ -101,13 +161,53 @@ async function coolDownQueueButtons(seconds) {
     button.setAttribute('aria-busy', 'false');
   });
 
-  for (let remaining = seconds; remaining > 0; remaining -= 1) {
+  const targetTime = Date.now() + seconds * 1000;
+  try {
+    sessionStorage.setItem('heronqueue_kiosk_cooldown_until', String(targetTime));
+  } catch (_) {}
+
+  while (true) {
+    const remainingMs = targetTime - Date.now();
+    const remainingSec = Math.ceil(remainingMs / 1000);
+
+    if (remainingSec <= 0) {
+      try {
+        sessionStorage.removeItem('heronqueue_kiosk_cooldown_until');
+      } catch (_) {}
+      buttons.forEach((button) => {
+        const label = button.querySelector('strong');
+        if (label && button.dataset.readyLabel) {
+          label.textContent = button.dataset.readyLabel;
+        }
+        button.disabled = false;
+        button.setAttribute('aria-busy', 'false');
+      });
+      joiningQueue = false;
+      break;
+    }
+
     buttons.forEach((button) => {
       const label = button.querySelector('strong');
-      if (label) label.textContent = `Ready in ${remaining}s`;
+      if (label) label.textContent = `Please wait (${remainingSec}s)`;
     });
-    await new Promise((resolve) => window.setTimeout(resolve, 1000));
+
+    await new Promise((resolve) => window.setTimeout(resolve, 500));
   }
+}
+
+function checkPersistentKioskCooldown() {
+  try {
+    const saved = sessionStorage.getItem('heronqueue_kiosk_cooldown_until');
+    if (!saved) return;
+    const remainingSec = Math.ceil((parseInt(saved, 10) - Date.now()) / 1000);
+    if (remainingSec > 0) {
+      joiningQueue = true;
+      setQueueButtonsLoading(true);
+      coolDownQueueButtons(remainingSec);
+    } else {
+      sessionStorage.removeItem('heronqueue_kiosk_cooldown_until');
+    }
+  } catch (_) {}
 }
 
 function setQueueButtonsLoading(isLoading) {
@@ -163,18 +263,58 @@ async function refreshStaff() {
   }
 }
 
+function setStaffControlsBusy(isBusy) {
+  const callBtn = document.querySelector('#callNext');
+  const recallBtn = document.querySelector('#recallTicket');
+  const skipBtn = document.querySelector('#skipTicket');
+
+  if (callBtn) callBtn.disabled = isBusy;
+  if (recallBtn) recallBtn.disabled = isBusy;
+  if (skipBtn) skipBtn.disabled = isBusy;
+}
+
+/**
+ * Applies a visible cooldown to the Call Next button to prevent accidental spamming.
+ */
+async function coolDownCallNextButton(seconds) {
+  const callBtn = document.querySelector('#callNext');
+  if (!callBtn) return;
+
+  callBtn.disabled = true;
+  callBtn.classList.add('cooldown');
+
+  for (let remaining = seconds; remaining > 0; remaining -= 1) {
+    callBtn.innerHTML = `<span class="material-symbols-outlined">timer</span><span>Ready in ${remaining}s</span>`;
+    await new Promise((resolve) => window.setTimeout(resolve, 1000));
+  }
+
+  callBtn.classList.remove('cooldown');
+  if (callBtn.dataset.originalHtml) {
+    callBtn.innerHTML = callBtn.dataset.originalHtml;
+  }
+}
+
 /**
  * Executes a staff state-changing action and refreshes the staff dashboard.
- * The shared async helper avoids duplicating POST and error-handling logic.
+ * Protects against rapid repeated clicks (no-show / skip).
  */
 async function staffAction(path, successMessage) {
+  if (callingNext || staffActionBusy) return;
+  staffActionBusy = true;
+  setStaffControlsBusy(true);
+
   try {
     const ticket = await request(path, { method: 'POST' });
     showToast(`${ticket.displayCode} ${successMessage}`);
     await refreshStaff();
+    await new Promise((resolve) => window.setTimeout(resolve, 1500));
   } catch (error) {
     showToast('There is no active ticket for this action.');
     console.error(error);
+    await new Promise((resolve) => window.setTimeout(resolve, 1000));
+  } finally {
+    setStaffControlsBusy(false);
+    staffActionBusy = false;
   }
 }
 
@@ -213,19 +353,57 @@ async function refreshHistory() {
 
 /**
  * Calls the next ticket, announces it, and reloads the staff view.
- * Multiple await expressions serialize dependent API calls: the status request
- * runs after the next-ticket operation has completed.
+ * Guarantees single-flight execution, disables the button, shows progress,
+ * and adds a mandatory cooldown to prevent skipping tickets accidentally.
  */
 async function callNext() {
+  if (callingNext || staffActionBusy) return;
+  callingNext = true;
+
+  const callBtn = document.querySelector('#callNext');
+  if (callBtn) {
+    callBtn.dataset.originalHtml ??= callBtn.innerHTML;
+    callBtn.disabled = true;
+    callBtn.setAttribute('aria-busy', 'true');
+    callBtn.innerHTML = `<span class="material-symbols-outlined spin">sync</span><span>Calling next...</span>`;
+  }
+  setStaffControlsBusy(true);
+
+  let success = false;
   try {
     // Tinatawag muna ang next-ticket endpoint bago kunin ang bagong active ticket.
-    await request('/next', { method: 'POST' });
-    announceTicket((await request('/status')).current?.displayCode);
+    const nextTicket = await request('/next', { method: 'POST' });
+    success = true;
+    const status = await request('/status');
+    const currentCode = status.current?.displayCode || nextTicket?.displayCode;
+    announceTicket(currentCode);
     await refreshStaff();
-    showToast('Next ticket called.');
+    showToast(`Next ticket called: ${currentCode}`);
   } catch (error) {
-    showToast('There are no waiting tickets to call.');
+    if (error.status === 429) {
+      showToast('Please wait a moment before calling another ticket.');
+    } else {
+      showToast('There are no waiting tickets to call.');
+    }
     console.error(error);
+  } finally {
+    if (callBtn) {
+      callBtn.setAttribute('aria-busy', 'false');
+    }
+
+    if (success) {
+      // 3-second cooldown prevents accidental double-clicking or rapid ticket drainage
+      await coolDownCallNextButton(3);
+    } else {
+      // Brief debounce delay on error or empty queue
+      await new Promise((resolve) => window.setTimeout(resolve, 1200));
+      if (callBtn && callBtn.dataset.originalHtml) {
+        callBtn.innerHTML = callBtn.dataset.originalHtml;
+      }
+    }
+
+    setStaffControlsBusy(false);
+    callingNext = false;
   }
 }
 
@@ -275,35 +453,52 @@ async function refreshMonitor() {
   }
 }
 
+// Attach event listeners
 document.querySelectorAll('[data-ticket-type]').forEach((button) => {
   // Ang button value ang nagsasabi kung REGULAR o PRIORITY ang ipapasok sa queue.
   button.addEventListener('click', () => joinQueue(button.dataset.ticketType));
 });
+
 document.querySelector('#callNext')?.addEventListener('click', callNext);
+
 document.querySelector('#recallTicket')?.addEventListener('click', async () => {
+  if (callingNext || staffActionBusy) return;
+  staffActionBusy = true;
+  setStaffControlsBusy(true);
+
   try {
     const ticket = await request('/recall', { method: 'POST' });
     announceTicket(ticket.displayCode);
     showToast(`${ticket.displayCode} recalled.`);
+    await new Promise((resolve) => window.setTimeout(resolve, 1500));
   } catch (error) {
     showToast('There is no active ticket to recall.');
+  } finally {
+    setStaffControlsBusy(false);
+    staffActionBusy = false;
   }
 });
+
 document.querySelector('#skipTicket')?.addEventListener('click', () => staffAction('/skip', 'marked as no-show.'));
 document.querySelector('#historySearch')?.addEventListener('input', refreshHistory);
 document.querySelector('#secretTrigger')?.addEventListener('click', () => {
   document.querySelector('#adminPanel').classList.toggle('visible');
 });
+
+// Page-specific initializations
 if (document.querySelector('#kioskNowServing')) {
-  // Kiosk page lang: kunin agad ang active ticket at i-refresh kada 5 segundo.
+  // Kiosk page: check persistent cooldown and poll now-serving ticket
+  checkPersistentKioskCooldown();
   startRefreshLoop(refreshKiosk, 5000);
 }
+
 if (document.querySelector('#waitingCount')) {
-  // Staff page lang: walang sabay-sabay na poll at titigil habang nakatago ang tab.
+  // Staff page: auto-refresh counters every 10 seconds
   startRefreshLoop(refreshStaff, 10000);
 }
+
 if (document.querySelector('#monitorCurrent')) {
-  // Monitor page lang: i-update ang orasan at queue display.
+  // Monitor page: update clock and queue display
   updateMonitorClock();
   window.setInterval(updateMonitorClock, 1000);
   startRefreshLoop(refreshMonitor, 5000);
