@@ -1,6 +1,9 @@
 const API_BASE = '/api/queue';
 
-// Displays short-lived feedback messages without interrupting the user.
+/**
+ * Displays short-lived feedback without interrupting the current page.
+ * DOM manipulation updates one existing toast element and its CSS state.
+ */
 function showToast(message) {
   const toast = document.querySelector('#toast');
   if (!toast) return;
@@ -9,7 +12,11 @@ function showToast(message) {
   window.setTimeout(() => toast.classList.remove('visible'), 3500);
 }
 
-// Central API helper used by kiosk, staff, and monitor pages.
+/**
+ * Sends an HTTP request to the Spring Boot queue API.
+ * async/await keeps network control flow readable; non-2xx responses become
+ * rejected Promises so each caller can show page-specific feedback.
+ */
 async function request(path, options = {}) {
   const response = await fetch(`${API_BASE}${path}`, {
     headers: { 'Content-Type': 'application/json' },
@@ -22,6 +29,10 @@ async function request(path, options = {}) {
   return response.status === 204 ? null : response.json();
 }
 
+/**
+ * Joins a selected queue, renders the generated ticket, and calculates
+ * position from the server's priority-ordered waiting array.
+ */
 async function joinQueue(ticketType) {
   try {
     const ticket = await request('/join', {
@@ -30,7 +41,7 @@ async function joinQueue(ticketType) {
     });
     document.querySelector('#ticketCode').textContent = ticket.displayCode;
     document.querySelector('#ticketType').textContent = `${ticket.ticketType} QUEUE`;
-    // Find this ticket in the sorted waiting list to calculate its position.
+    // The second awaited API call ensures the position uses current server data.
     const status = await request('/status');
     const ahead = status.waiting.findIndex((item) => item.id === ticket.id);
     document.querySelector('#peopleAhead').textContent = Math.max(ahead, 0);
@@ -41,6 +52,11 @@ async function joinQueue(ticketType) {
   }
 }
 
+/**
+ * Refreshes staff counters, active ticket, next-ticket preview, and history.
+ * DOM nodes are rebuilt from the API snapshot so the visible order matches the
+ * backend PriorityQueue rather than a separately maintained client structure.
+ */
 async function refreshStaff() {
   try {
     const status = await request('/status');
@@ -64,6 +80,10 @@ async function refreshStaff() {
   }
 }
 
+/**
+ * Executes a staff state-changing action and refreshes the staff dashboard.
+ * The shared async helper avoids duplicating POST and error-handling logic.
+ */
 async function staffAction(path, successMessage) {
   try {
     const ticket = await request(path, { method: 'POST' });
@@ -75,6 +95,11 @@ async function staffAction(path, successMessage) {
   }
 }
 
+/**
+ * Calls the next ticket, announces it, and reloads the staff view.
+ * Multiple await expressions serialize dependent API calls: the status request
+ * runs after the next-ticket operation has completed.
+ */
 async function callNext() {
   try {
     await request('/next', { method: 'POST' });
@@ -88,11 +113,14 @@ async function callNext() {
 
   function announceTicket(displayCode) {
     if (!displayCode || !('speechSynthesis' in window)) return;
+    // Web Speech API cancels stale announcements before speaking the newest
+    // ticket, preventing overlapping audio during rapid staff actions.
     window.speechSynthesis.cancel();
     window.speechSynthesis.speak(new SpeechSynthesisUtterance(`Now serving ${displayCode}.`));
   }
 
   async function refreshHistory() {
+    // History is fetched asynchronously, then filtered and rendered in the DOM.
     const history = await request('/history');
     const list = document.querySelector('#historyList');
     if (!list) return;
@@ -109,6 +137,10 @@ async function callNext() {
   }
 }
 
+/**
+ * Updates the monitor clock using the Philippines locale and current time.
+ * The caller schedules this function once per second with setInterval.
+ */
 function updateMonitorClock() {
   const clock = document.querySelector('#monitorClock');
   if (clock) {
@@ -120,6 +152,10 @@ function updateMonitorClock() {
   }
 }
 
+/**
+ * Refreshes the public monitor's current ticket and ordered waiting list.
+ * Each refresh replaces the rendered children so stale tickets disappear.
+ */
 async function refreshMonitor() {
   try {
     const status = await request('/status');
