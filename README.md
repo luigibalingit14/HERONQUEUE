@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="src/main/resources/static/assets/logos/umak-logo-black.png" alt="University of Makati Logo" width="200" style="vertical-align: middle; margin-right: 25px;">
+  <img src="src/main/resources/static/assets/logos/umak-logo-black.png" alt="University of Makati Logo" width="160" style="vertical-align: middle; margin-right: 25px;">
   &nbsp;&nbsp;&nbsp;&nbsp;
   <img src="src/main/resources/static/assets/logos/ccis-logo.png" alt="College of Computing and Information Sciences Logo" width="160" style="vertical-align: middle; margin-left: 25px;">
 </p>
