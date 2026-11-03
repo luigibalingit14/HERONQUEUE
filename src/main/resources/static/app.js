@@ -86,8 +86,27 @@ async function joinQueue(ticketType) {
       : 'Unable to join the queue right now. Please try again.');
     console.error(error);
   } finally {
+    if (ticketCreated) {
+      await coolDownQueueButtons(5);
+    }
     joiningQueue = false;
     setQueueButtonsLoading(false);
+  }
+}
+
+async function coolDownQueueButtons(seconds) {
+  const buttons = [...document.querySelectorAll('[data-ticket-type]')];
+  buttons.forEach((button) => {
+    button.disabled = true;
+    button.setAttribute('aria-busy', 'false');
+  });
+
+  for (let remaining = seconds; remaining > 0; remaining -= 1) {
+    buttons.forEach((button) => {
+      const label = button.querySelector('strong');
+      if (label) label.textContent = `Ready in ${remaining}s`;
+    });
+    await new Promise((resolve) => window.setTimeout(resolve, 1000));
   }
 }
 
