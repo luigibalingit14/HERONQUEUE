@@ -90,7 +90,8 @@ public class Ticket {
      * inside the entity instead of exposing writable status fields.</p>
      */
     public void startServing(LocalDateTime timestamp) {
-        // A ticket changes from WAITING to SERVING when staff calls it.
+        // A ticket changes from WAITING to SERVING when staff calls it;
+        // ang QueueManager ang nagse-save ng bagong status sa database.
         this.status = TicketStatus.SERVING;
         this.servedAt = timestamp;
     }

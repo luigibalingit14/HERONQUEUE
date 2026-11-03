@@ -21,6 +21,7 @@ public class TicketPriorityQueue {
      * 1. Priority tickets come first.
      * 2. Earlier numbers come first within the same ticket type.
      * 3. The UUID prevents two tickets from having the same order.
+     * Sa madaling sabi, ito ang batayan ng heap kung alin ang dapat mauna.
      */
     private static final Comparator<Ticket> TICKET_ORDER = Comparator
             .comparing(Ticket::getTicketType, Comparator.comparingInt(TicketPriorityQueue::priorityRank))
@@ -46,6 +47,7 @@ public class TicketPriorityQueue {
      * restore the heap property. SPACE COMPLEXITY: O(1) auxiliary, O(n) heap.</p>
      */
     public void add(Ticket ticket) {
+        // offer() ang naglalagay sa heap at inaayos ang posisyon ayon sa comparator.
         tickets.offer(ticket);
     }
 
@@ -56,6 +58,7 @@ public class TicketPriorityQueue {
      * downward after removal; returns {@code null} when the heap is empty.</p>
      */
     public Ticket removeNext() {
+        // poll() ang nag-aalis sa root, na siyang ticket na may pinakamataas na priority.
         return tickets.poll();
     }
 

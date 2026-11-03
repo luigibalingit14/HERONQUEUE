@@ -160,3 +160,32 @@ h1 { max-width: 680px; margin: 14px 0 20px; font-size: clamp(2.6rem, 6vw, 5.7rem
 @media (max-width: 800px) { .kiosk-layout, .staff-grid { grid-template-columns: 1fr; } .staff-heading { display: block; } .staff-heading-actions { justify-items: start; margin-top: 18px; } }
 @media (max-width: 800px) { .monitor-shell { grid-template-columns: 1fr; } .monitor-hero { grid-row: auto; min-height: 360px; } .monitor-queue-card { grid-column: auto; } }
 @media (max-width: 480px) { .topbar { padding: 20px 5vw; } .kiosk-layout { padding: 24px 5vw 50px; } .choice-grid { grid-template-columns: 1fr; } .display-screen { padding: 24px; } }
+@media (min-width: 801px) and (max-height: 760px) {
+  .staff-page .topbar { padding: 12px 6vw; }
+  .staff-page .brand-logo { width: 36px; height: 36px; }
+  .staff-shell { padding: 14px 5vw; }
+  .staff-heading { align-items: center; margin-bottom: 12px; }
+  .staff-heading h1 { margin-top: 4px; font-size: clamp(2rem, 4vw, 3rem); }
+  .staff-subtitle { margin-top: 4px; font-size: .85rem; }
+  .staff-heading-actions { gap: 6px; }
+  .status-chip { padding: 7px 10px; }
+  .staff-grid { gap: 12px; }
+  .now-card { min-height: 0; padding: 20px; }
+  .now-code { margin: 18px 0 20px; font-size: clamp(4rem, 9vw, 6rem); }
+  .now-helper { margin: -8px 0 16px; }
+  .call-button { padding: 12px 15px; }
+  .staff-actions { margin-top: 8px; }
+  .metric-stack { gap: 8px; grid-template-rows: repeat(3, minmax(0, 1fr)); }
+  .metric-card { min-height: 0; padding: 12px 16px; }
+  .metric-icon { top: 12px; right: 14px; font-size: 22px; }
+  .metric-value { margin-top: 10px; font-size: 2.5rem; }
+  .metric-status { font-size: 1.5rem; }
+  .breakdown-card { min-height: 0; }
+  .breakdown-row { margin-top: 8px; }
+  .next-panel, .history-panel { min-width: 0; padding: 16px; }
+  .next-panel, .history-panel { grid-column: auto; }
+  .panel-heading h2 { font-size: 1.2rem; }
+  .next-list, .history-list { max-height: 72px; gap: 6px; margin-top: 10px; overflow-y: auto; }
+  .next-item, .history-item { padding: 8px 10px; }
+  .empty-state { padding: 10px; }
+}

@@ -1,5 +1,7 @@
 const API_BASE = '/api/queue';
 
+// Iisang API helper ang ginagamit ng kiosk, staff dashboard, at public monitor.
+
 /**
  * Displays short-lived feedback without interrupting the current page.
  * DOM manipulation updates one existing toast element and its CSS state.
@@ -18,6 +20,7 @@ function showToast(message) {
  * rejected Promises so each caller can show page-specific feedback.
  */
 async function request(path, options = {}) {
+  // Ipadala ang request sa Spring Boot API; dito rin hinahawakan ang HTTP errors.
   const response = await fetch(`${API_BASE}${path}`, {
     headers: { 'Content-Type': 'application/json' },
     ...options
@@ -35,6 +38,7 @@ async function request(path, options = {}) {
  */
 async function joinQueue(ticketType) {
   try {
+    // Kumuha ng ticket sa server, saka ipakita ang code at pila sa kiosk.
     const ticket = await request('/join', {
       method: 'POST',
       body: JSON.stringify({ ticketType })
@@ -95,35 +99,20 @@ async function staffAction(path, successMessage) {
   }
 }
 
-/**
- * Calls the next ticket, announces it, and reloads the staff view.
- * Multiple await expressions serialize dependent API calls: the status request
- * runs after the next-ticket operation has completed.
- */
-async function callNext() {
+function announceTicket(displayCode) {
+  if (!displayCode || !('speechSynthesis' in window)) return;
+  // Kanselahin muna ang lumang announcement para hindi magsabay ang boses.
+  window.speechSynthesis.cancel();
+  window.speechSynthesis.speak(new SpeechSynthesisUtterance(`Now serving ${displayCode}.`));
+}
+
+async function refreshHistory() {
+  const list = document.querySelector('#historyList');
+  if (!list) return;
+
   try {
-    await request('/next', { method: 'POST' });
-    announceTicket((await request('/status')).current?.displayCode);
-    await refreshStaff();
-    showToast('Next ticket called.');
-  } catch (error) {
-    showToast('There are no waiting tickets to call.');
-    console.error(error);
-  }
-
-  function announceTicket(displayCode) {
-    if (!displayCode || !('speechSynthesis' in window)) return;
-    // Web Speech API cancels stale announcements before speaking the newest
-    // ticket, preventing overlapping audio during rapid staff actions.
-    window.speechSynthesis.cancel();
-    window.speechSynthesis.speak(new SpeechSynthesisUtterance(`Now serving ${displayCode}.`));
-  }
-
-  async function refreshHistory() {
-    // History is fetched asynchronously, then filtered and rendered in the DOM.
+    // Ang history ay galing sa API; dito lang ito sini-search at ipinapakita.
     const history = await request('/history');
-    const list = document.querySelector('#historyList');
-    if (!list) return;
     const query = document.querySelector('#historySearch')?.value.trim().toUpperCase() || '';
     list.replaceChildren();
     history.filter((ticket) => ticket.displayCode.includes(query)).slice(0, 10).forEach((ticket) => {
@@ -133,7 +122,31 @@ async function callNext() {
       item.innerHTML = `<strong>${ticket.displayCode}</strong><span>${ticket.status === 'NO_SHOW' ? 'No-show' : 'Completed'}</span><time>${time}</time>`;
       list.appendChild(item);
     });
-    if (!list.children.length) list.innerHTML = '<span class="empty-state">No matching tickets.</span>';
+    if (!list.children.length) {
+      const emptyMessage = query ? 'No matching tickets.' : 'No completed tickets yet.';
+      list.innerHTML = `<span class="empty-state">${emptyMessage}</span>`;
+    }
+  } catch (error) {
+    showToast('Serving history is unavailable.');
+    console.error(error);
+  }
+}
+
+/**
+ * Calls the next ticket, announces it, and reloads the staff view.
+ * Multiple await expressions serialize dependent API calls: the status request
+ * runs after the next-ticket operation has completed.
+ */
+async function callNext() {
+  try {
+    // Tinatawag muna ang next-ticket endpoint bago kunin ang bagong active ticket.
+    await request('/next', { method: 'POST' });
+    announceTicket((await request('/status')).current?.displayCode);
+    await refreshStaff();
+    showToast('Next ticket called.');
+  } catch (error) {
+    showToast('There are no waiting tickets to call.');
+    console.error(error);
   }
 }
 
@@ -184,6 +197,7 @@ async function refreshMonitor() {
 }
 
 document.querySelectorAll('[data-ticket-type]').forEach((button) => {
+  // Ang button value ang nagsasabi kung REGULAR o PRIORITY ang ipapasok sa queue.
   button.addEventListener('click', () => joinQueue(button.dataset.ticketType));
 });
 document.querySelector('#callNext')?.addEventListener('click', callNext);
@@ -202,10 +216,12 @@ document.querySelector('#secretTrigger')?.addEventListener('click', () => {
   document.querySelector('#adminPanel').classList.toggle('visible');
 });
 if (document.querySelector('#waitingCount')) {
+  // Staff page lang: kunin agad ang data at i-refresh kada 10 segundo.
   refreshStaff();
   window.setInterval(refreshStaff, 10000);
 }
 if (document.querySelector('#monitorCurrent')) {
+  // Monitor page lang: i-update nang magkahiwalay ang orasan at queue display.
   updateMonitorClock();
   refreshMonitor();
   window.setInterval(updateMonitorClock, 1000);

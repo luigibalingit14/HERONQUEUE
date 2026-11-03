@@ -26,6 +26,9 @@ import org.springframework.web.server.ResponseStatusException;
  * <p>DATA STRUCTURE: delegates ordering to the manager's priority queue instead
  * of storing queue state in the controller. TIME COMPLEXITY: endpoint mapping
  * is O(1), while response conversion is O(n) for list endpoints.</p>
+ *
+ * <p>Flow: tumatanggap ng HTTP request ang controller, ipinapasa ang trabaho sa
+ * QueueManager, at ibinabalik ang resulta bilang JSON response.</p>
  */
 public class QueueController {
 
@@ -45,6 +48,7 @@ public class QueueController {
     @ResponseStatus(HttpStatus.CREATED)
     public TicketResponse join(@Valid @RequestBody JoinQueueRequest request) {
         // Kiosk sends REGULAR or PRIORITY; QueueManager handles numbering and ordering.
+        // @RequestBody ang nagko-convert ng JSON mula sa browser papunta sa Java record.
         return TicketResponse.from(queueManager.addTicket(request.ticketType()));
     }
 

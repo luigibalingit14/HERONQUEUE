@@ -17,6 +17,7 @@
     <span class="eyebrow">Staff console</span>
   </header>
   <main class="staff-shell">
+    <!-- Kinokontrol ng staff ang active ticket gamit ang mga action button sa ibaba. -->
     <div class="staff-heading">
       <div>
         <div class="eyebrow">Operations / Live desk</div>
@@ -65,10 +66,12 @@
           <small>Accepting new tickets</small>
         </div>
       </aside>
+      <!-- Ang listahang ito ay mula sa server-sorted queue; hindi sariling pila ng browser. -->
       <section class="staff-panel next-panel">
         <div class="panel-heading"><div><div class="card-label">Next in line</div><h2>Upcoming tickets</h2></div><span class="panel-note">Priority order</span></div>
         <div class="next-list" id="nextTickets"><span class="empty-state">No waiting tickets.</span></div>
       </section>
+      <!-- Mga completed at no-show ticket mula sa history API. -->
       <section class="staff-panel history-panel">
         <div class="panel-heading"><div><div class="card-label">Today</div><h2>Serving history</h2></div><input id="historySearch" class="history-search" type="search" placeholder="Search ticket"></div>
         <div class="history-list" id="historyList"><span class="empty-state">No completed tickets yet.</span></div>

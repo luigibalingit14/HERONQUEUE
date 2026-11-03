@@ -37,6 +37,7 @@ public class QueueManager {
     public QueueManager(TicketRepository ticketRepository) {
         this.ticketRepository = ticketRepository;
         // Rebuild the in-memory heap after a restart using waiting database records.
+        // Hindi nawawala sa database ang tickets; ibinabalik lang dito ang mga WAITING.
         queue.restore(ticketRepository.findByStatus(TicketStatus.WAITING));
         currentTicket = ticketRepository.findByStatus(TicketStatus.SERVING).stream()
                 .findFirst()
@@ -63,6 +64,7 @@ public class QueueManager {
                     .findTopByTicketTypeAndCreatedAtGreaterThanEqualAndCreatedAtLessThanOrderByQueueNumberDesc(
                             ticketType, startOfDay, startOfTomorrow);
             int nextQueueNumber = lastTicket == null ? 1 : lastTicket.getQueueNumber() + 1;
+            // I-save muna para magkaroon ng permanenteng record bago idagdag sa active heap.
             Ticket ticket = ticketRepository.save(new Ticket(ticketType, nextQueueNumber));
             queue.add(ticket);
             return ticket;
@@ -94,6 +96,7 @@ public class QueueManager {
                 return Optional.empty();
             }
 
+            // Ang ticket ay wala na sa waiting heap; mula ngayon, ito na ang active ticket.
             next.startServing(LocalDateTime.now());
             currentTicket = ticketRepository.save(next);
             return Optional.of(currentTicket);

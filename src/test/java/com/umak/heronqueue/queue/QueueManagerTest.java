@@ -15,6 +15,7 @@ class QueueManagerTest {
 
     @Test
     void priorityTicketsAreServedBeforeRegularTickets() {
+        // Mock repository para ma-test ang queue rules nang walang totoong database.
         TicketRepository repository = org.mockito.Mockito.mock(TicketRepository.class);
         when(repository.findByStatus(any(TicketStatus.class))).thenReturn(List.of());
         when(repository.findTopByTicketTypeAndCreatedAtGreaterThanEqualAndCreatedAtLessThanOrderByQueueNumberDesc(
@@ -31,6 +32,7 @@ class QueueManagerTest {
 
     @Test
     void plainJavaQueueUsesPriorityAndNumberRules() {
+        // Sinusuri na mauuna ang Priority, at nakaayos ang mga ito ayon sa queue number.
         TicketPriorityQueue queue = new TicketPriorityQueue();
         Ticket regular = new Ticket(TicketType.REGULAR, 1);
         Ticket secondPriority = new Ticket(TicketType.PRIORITY, 2);
