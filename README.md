@@ -130,6 +130,10 @@ The local profile uses an in-memory H2 database. Open:
 - Staff dashboard: `http://localhost:8080/staff.html`
 - Public monitor: `http://localhost:8080/monitor.html`
 
+The app listens on port `8080` by default and uses the `PORT` environment
+variable when provided by a hosting platform. The frontend and queue API are
+served from the same origin, so the browser uses the deployed host automatically.
+
 ### Run tests
 
 ```bash

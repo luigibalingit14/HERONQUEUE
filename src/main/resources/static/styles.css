@@ -189,3 +189,140 @@ h1 { max-width: 680px; margin: 14px 0 20px; font-size: clamp(2.6rem, 6vw, 5.7rem
   .next-item, .history-item { padding: 8px 10px; }
   .empty-state { padding: 10px; }
 }
+
+@media (min-width: 801px) and (max-width: 1100px) {
+  .kiosk-layout { grid-template-columns: minmax(0, 1fr) minmax(300px, .9fr); gap: 28px; }
+  .choice-grid { gap: 12px; }
+  .queue-button { padding: 20px; }
+  .staff-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px; }
+  .now-card, .metric-stack { grid-column: 1 / -1; }
+  .now-card { min-height: 0; }
+  .metric-stack { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; }
+  .metric-card { min-height: 170px; padding: 22px; }
+  .next-panel, .history-panel { grid-column: auto; min-width: 0; padding: 22px; }
+  .panel-heading { align-items: flex-start; flex-wrap: wrap; }
+  .monitor-shell { gap: 18px; padding-top: 36px; }
+  .monitor-hero { min-height: 390px; padding: 42px; }
+  .monitor-queue-card { padding: 22px; }
+}
+
+@media (max-width: 800px) {
+  body { min-height: 100vh; min-height: 100dvh; }
+  .kiosk-page { background-attachment: scroll; }
+  .topbar { gap: 16px; padding: 22px 5vw; }
+  .topbar > .eyebrow { text-align: right; }
+  .kiosk-layout {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 28px;
+    min-height: 0;
+    padding: 24px 5vw 48px;
+  }
+  .choice-grid { margin-top: 28px; }
+  .queue-button { min-height: 150px; }
+  .display-card { border-radius: 24px; }
+  .display-screen { min-height: 340px; }
+  .ticket-output { min-height: 205px; }
+
+  .staff-shell { padding: 34px 5vw 56px; }
+  .staff-heading { margin-bottom: 24px; }
+  .staff-heading-actions { justify-items: start; }
+  .now-card { min-height: 0; }
+  .metric-stack { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
+  .metric-card { min-height: 150px; padding: 20px; }
+  .metric-value { font-size: 3rem; }
+  .breakdown-card { min-height: 150px; }
+  .next-panel, .history-panel { grid-column: auto; min-width: 0; padding: 22px; }
+  .panel-heading { align-items: flex-start; flex-wrap: wrap; }
+  .monitor-shell { grid-template-columns: minmax(0, 1fr); gap: 18px; padding: 28px 5vw 48px; }
+  .monitor-hero { grid-row: auto; min-height: 300px; padding: 36px; }
+  .monitor-stats { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+  .monitor-stat { gap: 12px; padding: 20px; }
+  .monitor-queue-card { grid-column: auto; padding: 22px; }
+  .monitor-queue-list { max-height: 340px; overscroll-behavior: contain; }
+}
+
+@media (min-width: 561px) and (max-width: 800px) {
+  .staff-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .now-card, .metric-stack { grid-column: 1 / -1; }
+  .metric-stack { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .next-panel, .history-panel { grid-column: auto; }
+}
+
+@media (max-width: 560px) {
+  .topbar { align-items: flex-start; padding: 18px 5vw; }
+  .brand { gap: 9px; font-size: .85rem; }
+  .brand-logo { width: 36px; height: 36px; }
+  .brand-copy small { font-size: .48rem; }
+  .topbar > .eyebrow { max-width: 120px; padding-top: 8px; font-size: .58rem; line-height: 1.5; }
+  .kiosk-layout { padding-top: 20px; }
+  .kiosk-layout h1 { font-size: clamp(2.5rem, 12vw, 3.8rem); }
+  .intro { font-size: .92rem; }
+  .choice-grid { grid-template-columns: minmax(0, 1fr); gap: 12px; margin-top: 22px; }
+  .queue-button { min-height: 0; padding: 18px; border-radius: 18px; }
+  .queue-button .material-symbols-outlined { margin-bottom: 12px; }
+  .queue-button strong { font-size: 1.05rem; }
+  .display-screen { min-height: 300px; padding: 22px; }
+  .ticket-output { min-height: 180px; }
+  .screen-label { gap: 10px; font-size: .62rem; }
+
+  .staff-shell { padding-top: 28px; }
+  .staff-heading h1 { font-size: clamp(2.2rem, 11vw, 3.2rem); }
+  .staff-subtitle { font-size: .9rem; line-height: 1.5; }
+  .staff-grid { gap: 14px; }
+  .now-card { padding: 24px; border-radius: 20px; }
+  .now-code { margin: 24px 0 30px; font-size: clamp(4.5rem, 22vw, 7rem); }
+  .now-helper { margin: -12px 0 24px; line-height: 1.5; }
+  .call-button { width: 100%; min-height: 50px; justify-content: center; }
+  .call-button .button-arrow { margin-left: auto; }
+  .staff-actions { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .secondary-button, .danger-button { min-height: 48px; justify-content: center; }
+  .metric-stack { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+  .metric-card, .breakdown-card { min-height: 142px; padding: 17px; border-radius: 18px; }
+  .metric-card:first-child { grid-column: 1 / -1; }
+  .metric-icon { top: 16px; right: 16px; font-size: 23px; }
+  .metric-value { margin-top: 14px; font-size: 2.8rem; }
+  .metric-status { font-size: 1.55rem; }
+  .breakdown-row { gap: 5px; font-size: .73rem; }
+  .breakdown-row strong { font-size: 1rem; }
+  .staff-panel { border-radius: 18px; }
+  .next-panel, .history-panel { padding: 18px; }
+  .panel-heading { gap: 12px; }
+  .panel-heading h2 { font-size: 1.25rem; }
+  .history-search { width: 100%; min-height: 46px; }
+  .next-item { grid-template-columns: 25px minmax(0, 1fr) auto; gap: 7px; padding: 12px 10px; }
+  .history-item { grid-template-columns: minmax(0, 1fr) auto; gap: 6px 10px; }
+  .history-item time { grid-column: 2; }
+
+  .monitor-page .topbar { padding: 18px 5vw; }
+  .monitor-heading { gap: 5px; }
+  .monitor-heading .eyebrow { font-size: .58rem; }
+  .monitor-clock { font-size: .78rem; }
+  .monitor-shell { padding-top: 22px; }
+  .monitor-hero { min-height: 250px; padding: 28px; border-radius: 22px; }
+  .monitor-ticket { margin: 32px 0 22px; font-size: clamp(5rem, 23vw, 8rem); }
+  .monitor-hero p { font-size: .9rem; }
+  .monitor-stats { gap: 10px; }
+  .monitor-stat { gap: 9px; padding: 15px 12px; border-radius: 16px; }
+  .monitor-stat > .material-symbols-outlined { font-size: 24px; }
+  .monitor-stat small { font-size: .6rem; letter-spacing: .06em; }
+  .monitor-stat strong { font-size: 1.6rem; }
+  .monitor-queue-card { padding: 18px; border-radius: 20px; }
+  .monitor-queue-header { align-items: flex-start; flex-wrap: wrap; }
+  .monitor-queue-header h1 { font-size: 1.55rem; }
+  .monitor-queue-item { grid-template-columns: 24px minmax(0, 1fr) auto; gap: 7px; padding: 12px 10px; }
+  .monitor-queue-item strong { font-size: 1rem; }
+  .monitor-queue-item small { font-size: .65rem; }
+  .toast { right: max(14px, env(safe-area-inset-right)); bottom: max(14px, env(safe-area-inset-bottom)); left: max(14px, env(safe-area-inset-left)); max-width: none; text-align: center; }
+}
+
+@media (max-width: 360px) {
+  .brand-copy strong { font-size: .72rem; }
+  .brand-copy small { font-size: .42rem; }
+  .staff-grid, .monitor-stats { grid-template-columns: minmax(0, 1fr); }
+  .metric-card:first-child { grid-column: auto; }
+  .history-item { font-size: .85rem; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { scroll-behavior: auto !important; transition-duration: .01ms !important; animation-duration: .01ms !important; animation-iteration-count: 1 !important; }
+}

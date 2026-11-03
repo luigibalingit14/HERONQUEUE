@@ -23,6 +23,7 @@ async function request(path, options = {}) {
   // Ipadala ang request sa Spring Boot API; dito rin hinahawakan ang HTTP errors.
   const response = await fetch(`${API_BASE}${path}`, {
     headers: { 'Content-Type': 'application/json' },
+    cache: 'no-store',
     ...options
   });
   if (!response.ok) {
@@ -30,6 +31,28 @@ async function request(path, options = {}) {
     throw new Error(body || `Request failed (${response.status})`);
   }
   return response.status === 204 ? null : response.json();
+}
+
+function startRefreshLoop(refresh, interval) {
+  let timeoutId;
+  let refreshing = false;
+
+  const run = async () => {
+    if (document.hidden || refreshing) return;
+    refreshing = true;
+    try {
+      await refresh();
+    } finally {
+      refreshing = false;
+      if (!document.hidden) timeoutId = window.setTimeout(run, interval);
+    }
+  };
+
+  document.addEventListener('visibilitychange', () => {
+    window.clearTimeout(timeoutId);
+    if (!document.hidden) run();
+  });
+  run();
 }
 
 /**
@@ -216,14 +239,12 @@ document.querySelector('#secretTrigger')?.addEventListener('click', () => {
   document.querySelector('#adminPanel').classList.toggle('visible');
 });
 if (document.querySelector('#waitingCount')) {
-  // Staff page lang: kunin agad ang data at i-refresh kada 10 segundo.
-  refreshStaff();
-  window.setInterval(refreshStaff, 10000);
+  // Staff page lang: walang sabay-sabay na poll at titigil habang nakatago ang tab.
+  startRefreshLoop(refreshStaff, 10000);
 }
 if (document.querySelector('#monitorCurrent')) {
-  // Monitor page lang: i-update nang magkahiwalay ang orasan at queue display.
+  // Monitor page lang: i-update ang orasan at queue display.
   updateMonitorClock();
-  refreshMonitor();
   window.setInterval(updateMonitorClock, 1000);
-  window.setInterval(refreshMonitor, 5000);
+  startRefreshLoop(refreshMonitor, 5000);
 }
