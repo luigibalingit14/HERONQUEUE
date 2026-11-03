@@ -1,4 +1,5 @@
 const API_BASE = '/api/queue';
+let joiningQueue = false;
 
 // Iisang API helper ang ginagamit ng kiosk, staff dashboard, at public monitor.
 
@@ -60,12 +61,18 @@ function startRefreshLoop(refresh, interval) {
  * position from the server's priority-ordered waiting array.
  */
 async function joinQueue(ticketType) {
+  if (joiningQueue) return;
+  joiningQueue = true;
+  setQueueButtonsLoading(true);
+
+  let ticketCreated = false;
   try {
     // Kumuha ng ticket sa server, saka ipakita ang code at pila sa kiosk.
     const ticket = await request('/join', {
       method: 'POST',
       body: JSON.stringify({ ticketType })
     });
+    ticketCreated = true;
     document.querySelector('#ticketCode').textContent = ticket.displayCode;
     document.querySelector('#ticketType').textContent = `${ticket.ticketType} QUEUE`;
     // The second awaited API call ensures the position uses current server data.
@@ -74,9 +81,26 @@ async function joinQueue(ticketType) {
     document.querySelector('#peopleAhead').textContent = Math.max(ahead, 0);
     showToast('Your place is secured. Please watch the display.');
   } catch (error) {
-    showToast('Unable to join the queue right now. Please try again.');
+    showToast(ticketCreated
+      ? 'Ticket created, but queue position could not be refreshed.'
+      : 'Unable to join the queue right now. Please try again.');
     console.error(error);
+  } finally {
+    joiningQueue = false;
+    setQueueButtonsLoading(false);
   }
+}
+
+function setQueueButtonsLoading(isLoading) {
+  document.querySelectorAll('[data-ticket-type]').forEach((button) => {
+    const label = button.querySelector('strong');
+    if (!label) return;
+
+    button.dataset.readyLabel ??= label.textContent;
+    button.disabled = isLoading;
+    button.setAttribute('aria-busy', String(isLoading));
+    label.textContent = isLoading ? 'Getting ticket...' : button.dataset.readyLabel;
+  });
 }
 
 async function refreshKiosk() {
