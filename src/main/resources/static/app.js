@@ -79,6 +79,19 @@ async function joinQueue(ticketType) {
   }
 }
 
+async function refreshKiosk() {
+  const nowServing = document.querySelector('#kioskNowServing');
+  if (!nowServing) return;
+
+  try {
+    const status = await request('/status');
+    nowServing.textContent = status.current?.displayCode || '—';
+  } catch (error) {
+    nowServing.textContent = 'Unavailable';
+    console.error(error);
+  }
+}
+
 /**
  * Refreshes staff counters, active ticket, next-ticket preview, and history.
  * DOM nodes are rebuilt from the API snapshot so the visible order matches the
@@ -238,6 +251,10 @@ document.querySelector('#historySearch')?.addEventListener('input', refreshHisto
 document.querySelector('#secretTrigger')?.addEventListener('click', () => {
   document.querySelector('#adminPanel').classList.toggle('visible');
 });
+if (document.querySelector('#kioskNowServing')) {
+  // Kiosk page lang: kunin agad ang active ticket at i-refresh kada 5 segundo.
+  startRefreshLoop(refreshKiosk, 5000);
+}
 if (document.querySelector('#waitingCount')) {
   // Staff page lang: walang sabay-sabay na poll at titigil habang nakatago ang tab.
   startRefreshLoop(refreshStaff, 10000);

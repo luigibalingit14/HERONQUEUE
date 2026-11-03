@@ -64,6 +64,9 @@ h1 { max-width: 680px; margin: 14px 0 20px; font-size: clamp(2.6rem, 6vw, 5.7rem
 .display-card { padding: 12px; border: 1px solid var(--glass-border); border-radius: 30px; background: rgba(255,255,255,.06); backdrop-filter: blur(20px); box-shadow: var(--shadow); }
 .display-screen { min-height: 430px; padding: 36px; border-radius: 21px; background: linear-gradient(145deg, #17245d, #0b1236); }
 .screen-label { display: flex; justify-content: space-between; align-items: center; color: var(--text-muted); font-size: .7rem; letter-spacing: .14em; text-transform: uppercase; }
+.kiosk-now-serving { display: grid; justify-items: center; gap: 5px; margin: 24px auto 0; text-align: center; }
+.kiosk-now-serving span { color: var(--text-muted); font-size: .68rem; font-weight: 700; letter-spacing: .14em; text-transform: uppercase; }
+.kiosk-now-serving strong { color: #fff; font-size: clamp(2rem, 5vw, 3rem); font-weight: 800; letter-spacing: -.04em; }
 .live-dot { width: 8px; height: 8px; display: inline-block; margin-right: 7px; border-radius: 50%; background: #64e0a1; box-shadow: 0 0 14px #64e0a1; }
 .ticket-output { display: grid; min-height: 270px; place-content: center; text-align: center; }
 .ticket-output .ticket-code { color: var(--umak-secondary); font-size: clamp(3.2rem, 8vw, 5.8rem); font-weight: 800; letter-spacing: -.06em; }
@@ -221,7 +224,7 @@ h1 { max-width: 680px; margin: 14px 0 20px; font-size: clamp(2.6rem, 6vw, 5.7rem
   .queue-button { min-height: 150px; }
   .display-card { border-radius: 24px; }
   .display-screen { min-height: 340px; }
-  .ticket-output { min-height: 205px; }
+  .ticket-output { min-height: 165px; }
 
   .staff-shell { padding: 34px 5vw 56px; }
   .staff-heading { margin-bottom: 24px; }
@@ -262,7 +265,7 @@ h1 { max-width: 680px; margin: 14px 0 20px; font-size: clamp(2.6rem, 6vw, 5.7rem
   .queue-button .material-symbols-outlined { margin-bottom: 12px; }
   .queue-button strong { font-size: 1.05rem; }
   .display-screen { min-height: 300px; padding: 22px; }
-  .ticket-output { min-height: 180px; }
+  .ticket-output { min-height: 145px; }
   .screen-label { gap: 10px; font-size: .62rem; }
 
   .staff-shell { padding-top: 28px; }
