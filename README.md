@@ -159,6 +159,28 @@ SUPABASE_DB_USER=your-database-user
 SUPABASE_DB_PASSWORD=your-database-password
 ```
 
+## Deploy to Render
+
+This repository includes a Render Blueprint (`render.yaml`) and a Dockerfile.
+To deploy:
+
+1. Create a Supabase project, run `src/main/resources/supabase_schema.sql` in
+   the Supabase SQL Editor, and prepare its PostgreSQL connection URL, database
+   username, and password. Use the connection details recommended by Supabase
+   for your deployment region.
+2. In Render, choose **New → Blueprint** and connect this GitHub repository.
+3. Before creating the service, enter `SUPABASE_JDBC_URL`, `SUPABASE_DB_USER`,
+   and `SUPABASE_DB_PASSWORD` as secret environment values when prompted.
+   The production profile requires these values; they are not stored in Git.
+4. Deploy the `heronqueue` web service. Render builds the Docker image and
+   redeploys when new commits are pushed to `main`.
+5. Once deployment is healthy, open `/kiosk.html`, `/staff.html`, or
+   `/monitor.html` on the Render service URL.
+
+The free Render plan may spin down an idle service, so its first request after
+inactivity can take longer. Persistent queue records are stored in Supabase,
+not in the service container.
+
 ## API Endpoints
 
 | Method | Endpoint | Purpose |
