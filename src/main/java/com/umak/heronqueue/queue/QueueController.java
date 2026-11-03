@@ -23,19 +23,23 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
 
+/**
+ * ============================================================================
+ * QUEUE REST CONTROLLER (WEB API LAYER)
+ * ============================================================================
+ *
+ * PAPEL SA SYSTEM:
+ * Ito ang tulay (bridge) sa pagitan ng web browser (Kiosk, Monitor, Staff)
+ * at ng ating Java Data Structure sa backend.
+ *
+ * PAANO ITO GUMAGANA:
+ * 1. Ang browser (JavaScript fetch) ay nagpapadala ng HTTP request (POST/GET) sa /api/queue/...
+ * 2. Tinatanggap ng Controller ang request, tinitingnan kung may spam, at ipinapasa sa QueueManager.
+ * 3. Ibinabalik ng Controller ang data bilang JSON pabalik sa user interface.
+ */
 @RestController
 @RequestMapping("/api/queue")
 @CrossOrigin(origins = "*")
-/**
- * Exposes queue operations as HTTP endpoints for kiosk, staff, and monitor UIs.
- *
- * <p>DATA STRUCTURE: delegates ordering to the manager's priority queue instead
- * of storing queue state in the controller. TIME COMPLEXITY: endpoint mapping
- * is O(1), while response conversion is O(n) for list endpoints.</p>
- *
- * <p>Flow: tumatanggap ng HTTP request ang controller, ipinapasa ang trabaho sa
- * QueueManager, at ibinabalik ang resulta bilang JSON response.</p>
- */
 public class QueueController {
 
     private final QueueManager queueManager;
@@ -47,11 +51,9 @@ public class QueueController {
     }
 
     /**
-     * Accepts a ticket request and returns its generated display information.
-     * Includes a rate-limit check per client to prevent spamming ticket generation.
-     *
-     * <p>Validation rejects a missing enum value before the manager inserts the
-     * ticket. Queue insertion is O(log n), excluding persistence work.</p>
+     * ENDPOINT 1: POST /api/queue/join
+     * Tinatawag ng Kiosk kapag pinindot ng estudyante ang "Regular" o "Priority".
+     * May kasamang 3-second rate limit para maiwasan ang accidental spamming.
      */
     @PostMapping("/join")
     @ResponseStatus(HttpStatus.CREATED)
@@ -69,18 +71,13 @@ public class QueueController {
         lastJoinTimes.put(key, now);
         cleanOldEntries(lastJoinTimes, now.minusSeconds(60));
 
-        // Kiosk sends REGULAR or PRIORITY; QueueManager handles numbering and ordering.
-        // @RequestBody ang nagko-convert ng JSON mula sa browser papunta sa Java record.
         return TicketResponse.from(queueManager.addTicket(request.ticketType()));
     }
 
     /**
-     * Calls the next ticket selected by the priority-queue comparator.
-     * Throttles consecutive rapid calls from the same staff client to prevent
-     * skipping tickets accidentally.
-     *
-     * <p>Heap removal is O(log n); an empty queue is represented by HTTP 204
-     * through a {@link ResponseStatusException}.</p>
+     * ENDPOINT 2: POST /api/queue/next
+     * Tinatawag ng Staff Dashboard kapag pinindot ang "Call next ticket".
+     * Inaalis ang susunod na pinakamataas na priority ticket mula sa Binary Heap.
      */
     @PostMapping("/next")
     public TicketResponse next(
@@ -96,7 +93,6 @@ public class QueueController {
         lastNextTimes.put(key, now);
         cleanOldEntries(lastNextTimes, now.minusSeconds(60));
 
-        // Staff uses this endpoint to remove the next ticket from the PriorityQueue.
         return queueManager.pollNext()
                 .map(TicketResponse::from)
                 .orElseThrow(() -> new ResponseStatusException(
@@ -104,14 +100,12 @@ public class QueueController {
     }
 
     /**
-     * Returns one consistent snapshot for all live queue displays.
-     *
-     * <p>The manager creates the snapshot under its lock; mapping waiting
-     * tickets to DTOs is O(n), where n is the number of waiting tickets.</p>
+     * ENDPOINT 3: GET /api/queue/status
+     * Tinatawag ng Public Monitor, Kiosk, at Staff para sa real-time live display.
+     * Mabilis itong sumasagot dahil binabasa lang nito ang snapshot sa Java RAM nang walang database overhead.
      */
     @GetMapping("/status")
     public QueueStatusResponse status() {
-        // Staff, kiosk, and monitor all use one snapshot endpoint for live updates.
         QueueManager.QueueSnapshot snapshot = queueManager.getSnapshot();
         return new QueueStatusResponse(
                 TicketResponse.fromNullable(snapshot.current()),
@@ -121,10 +115,8 @@ public class QueueController {
     }
 
     /**
-     * Marks the active ticket as a no-show.
-     *
-     * <p>The manager performs an O(1) state transition, excluding the database
-     * update, and returns 204 when no ticket is currently serving.</p>
+     * ENDPOINT 4: POST /api/queue/skip
+     * Minamarkahan ang kasalukuyang ticket bilang NO-SHOW.
      */
     @PostMapping("/skip")
     public TicketResponse skip() {
@@ -134,10 +126,8 @@ public class QueueController {
     }
 
     /**
-     * Reads the active ticket without changing queue state.
-     *
-     * <p>The manager's lookup is O(1), and an absent active ticket produces
-     * HTTP 204 rather than a fabricated response.</p>
+     * ENDPOINT 5: POST /api/queue/recall
+     * Muling ina-anunsyo ang kasalukuyang ticket.
      */
     @PostMapping("/recall")
     public TicketResponse recall() {
@@ -147,10 +137,8 @@ public class QueueController {
     }
 
     /**
-     * Returns today's completed and no-show tickets for staff history.
-     *
-     * <p>Mapping the repository result to response records is O(h), where h is
-     * the number of returned history entries.</p>
+     * ENDPOINT 6: GET /api/queue/history
+     * Kinukuha ang kasaysayan ng mga napagserbisyuhan ngayong araw.
      */
     @GetMapping("/history")
     public List<TicketResponse> history() {
@@ -177,21 +165,9 @@ public class QueueController {
         }
     }
 
-    /**
-     * Validated request DTO containing the requested queue category.
-     *
-     * <p>The enum provides a closed set of polymorphic ticket types rather than
-     * relying on unchecked strings.</p>
-     */
     public record JoinQueueRequest(@NotNull TicketType ticketType) {
     }
 
-    /**
-     * Immutable API DTO that prevents persistence entities from leaking outward.
-     *
-     * <p>Conversion is O(1) per ticket. The UUID is retained for identity while
-     * displayCode exposes the readable queue number.</p>
-     */
     public record TicketResponse(
             UUID id,
             String displayCode,
@@ -200,9 +176,6 @@ public class QueueController {
             LocalDateTime createdAt,
             LocalDateTime servedAt) {
 
-        /**
-         * Converts one domain entity to an HTTP response record in O(1) time.
-         */
         static TicketResponse from(Ticket ticket) {
             return new TicketResponse(
                     ticket.getId(),
@@ -213,34 +186,16 @@ public class QueueController {
                     ticket.getServedAt());
         }
 
-        /**
-         * Converts an optional active entity while preserving a null API value.
-         *
-         * <p>TIME COMPLEXITY: O(1).</p>
-         */
         static TicketResponse fromNullable(Ticket ticket) {
             return ticket == null ? null : from(ticket);
         }
 
-        /**
-         * Builds a user-facing prefix and zero-padded queue number.
-         *
-         * <p>TIME COMPLEXITY: O(1); UUID remains an internal unique identifier,
-         * while the code is optimized for human reading and announcements.</p>
-         */
         private static String displayCode(Ticket ticket) {
-            // Display code is easier to read than the UUID: R-001 or P-001.
             String prefix = ticket.getTicketType() == TicketType.PRIORITY ? "P" : "R";
             return prefix + "-" + String.format("%03d", ticket.getQueueNumber());
         }
     }
 
-    /**
-     * Immutable aggregate sent to live queue displays.
-     *
-     * <p>It contains the current ticket, waiting count, ordered waiting list,
-     * and per-type counts prepared by {@link QueueManager}.</p>
-     */
     public record QueueStatusResponse(
             TicketResponse current,
             int waitingCount,

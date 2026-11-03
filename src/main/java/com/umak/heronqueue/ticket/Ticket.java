@@ -9,19 +9,24 @@ import jakarta.persistence.Table;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
+/**
+ * ============================================================================
+ * TICKET ENTITY (NODE / ELEMENT NG DATA STRUCTURE)
+ * ============================================================================
+ *
+ * KONSEPTO SA DATA STRUCTURES:
+ * Ito ang nagsisilbing "Node" o data object na iniimbak sa ating Binary Heap.
+ * Naglalaman ito ng:
+ * 1. ticketType: 'PRIORITY' o 'REGULAR' (Ginamit ng Comparator para sa ranking)
+ * 2. queueNumber: 1, 2, 3... (Ginamit ng Comparator para sa FIFO order sa parehong category)
+ * 3. id: Unique UUID para sa identity
+ * 4. status: 'WAITING', 'SERVING', 'COMPLETED', 'NO_SHOW'
+ * 5. timestamps: createdAt at servedAt
+ */
 @Entity
 @Table(name = "tickets")
-/**
- * JPA entity representing one student-service queue ticket.
- *
- * <p>OOP: private fields enforce encapsulation, while enums provide a type-safe
- * polymorphic choice of ticket type and status. TIME COMPLEXITY: in-memory
- * construction and state changes are O(1); persistence cost is database-dependent.</p>
- */
 public class Ticket {
 
-    // UUID is the internal database identifier; queueNumber is the human-readable number.
-    // Encapsulation keeps identity and workflow state controlled by this entity.
     @Id
     private UUID id;
 
@@ -46,10 +51,8 @@ public class Ticket {
     }
 
     /**
-     * Creates a new waiting ticket with a unique internal identity.
-     *
-     * <p>TIME COMPLEXITY: O(1). The queue number is supplied by the manager,
-     * which owns daily numbering, while this entity owns initial state.</p>
+     * CONSTRUCTOR:
+     * Lumilikha ng bagong ticket na may status na 'WAITING' sa O(1) time.
      */
     public Ticket(TicketType ticketType, int queueNumber) {
         this.id = UUID.randomUUID();
@@ -84,34 +87,22 @@ public class Ticket {
     }
 
     /**
-     * Transitions this ticket from WAITING to SERVING.
-     *
-     * <p>TIME COMPLEXITY: O(1). Encapsulation places the valid state mutation
-     * inside the entity instead of exposing writable status fields.</p>
+     * State transition: WAITING -> SERVING (O(1))
      */
     public void startServing(LocalDateTime timestamp) {
-        // A ticket changes from WAITING to SERVING when staff calls it;
-        // ang QueueManager ang nagse-save ng bagong status sa database.
         this.status = TicketStatus.SERVING;
         this.servedAt = timestamp;
     }
 
     /**
-     * Transitions the active ticket to COMPLETED.
-     *
-     * <p>TIME COMPLEXITY: O(1); the database save is performed by the service
-     * layer after this in-memory state change.</p>
+     * State transition: SERVING -> COMPLETED (O(1))
      */
     public void complete() {
-        // The current ticket is marked completed before another ticket is called.
         this.status = TicketStatus.COMPLETED;
     }
 
     /**
-     * Transitions the active ticket to NO_SHOW.
-     *
-     * <p>TIME COMPLEXITY: O(1), with the service layer responsible for
-     * persisting the updated entity.</p>
+     * State transition: SERVING -> NO_SHOW (O(1))
      */
     public void markNoShow() {
         this.status = TicketStatus.NO_SHOW;

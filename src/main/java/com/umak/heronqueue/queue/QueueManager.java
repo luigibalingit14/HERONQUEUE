@@ -12,32 +12,43 @@ import java.util.Map;
 import java.util.concurrent.locks.ReentrantLock;
 import org.springframework.stereotype.Service;
 
-@Service
 /**
- * Coordinates persistent tickets with the in-memory priority queue.
+ * ============================================================================
+ * QUEUE MANAGER (SERVICE LAYER)
+ * ============================================================================
+ * 
+ * PAPEL SA SYSTEM:
+ * Ito ang "utak" ng HeronQueue na nag-uugnay sa:
+ * 1. In-Memory Data Structure (TicketPriorityQueue / Binary Heap sa RAM)
+ * 2. Persistent Database (Supabase PostgreSQL / JPA Repository sa Disk)
+ * 3. Concurrency Control (ReentrantLock para sa Thread-Safety)
  *
- * <p>DATA STRUCTURES: a {@link TicketPriorityQueue} binary heap plus repository
- * query results. TIME COMPLEXITY: heap insertion/removal is O(log n), while
- * snapshots and history depend on the number of waiting or stored tickets.</p>
+ * BAKIT IN-MEMORY HEAP + DATABASE?
+ * - In-Memory Heap: Napakabilis mag-add at mag-poll ng susunod na ticket (O(log n)),
+ *   at mabilis magbasa ng snapshot ang mga monitor nang hindi bumabagal ang database.
+ * - Database: Nagsisilbing permanent storage upang kapag nag-restart o nag-brownout
+ *   ang server, muling makuha (restore) ang lahat ng mga nakapila nang walang nawawala.
  */
+@Service
 public class QueueManager {
 
     private final TicketRepository ticketRepository;
     private final TicketPriorityQueue queue = new TicketPriorityQueue();
+
+    // ReentrantLock: Sinisiguro na iisang thread lang ang nagbabago ng pila
+    // sa bawat saglit upang maiwasan ang race condition / duplicate queue numbers.
     private final ReentrantLock queueLock = new ReentrantLock();
+
+    // Ang kasalukuyang ticket na nasa counter (Now Serving).
     private Ticket currentTicket;
 
     /**
-     * Restores waiting tickets into the heap after application startup.
-     *
-     * <p>RESTORE COST: O(n log n) using repeated heap insertion; database query
-     * cost depends on the persistence provider. The repository is injected to
-     * keep storage concerns separate from queue-management logic.</p>
+     * CONSTRUCTOR & RESTORATION:
+     * Pagka-start ng Spring Boot, kinukuha ang lahat ng ticket na may status na 'WAITING'
+     * sa database at muling ipinapasok sa binary heap upang i-reconstruct ang pila.
      */
     public QueueManager(TicketRepository ticketRepository) {
         this.ticketRepository = ticketRepository;
-        // Rebuild the in-memory heap after a restart using waiting database records.
-        // Hindi nawawala sa database ang tickets; ibinabalik lang dito ang mga WAITING.
         queue.restore(ticketRepository.findByStatus(TicketStatus.WAITING));
         currentTicket = ticketRepository.findByStatus(TicketStatus.SERVING).stream()
                 .findFirst()
@@ -45,26 +56,28 @@ public class QueueManager {
     }
 
     /**
-     * Creates and enqueues the next numbered ticket for a ticket type.
-     *
-     * <p>TIME COMPLEXITY: O(log n) for heap insertion, excluding the database
-     * query/save. The date range makes numbering restart each day without
-     * deleting historical records.</p>
+     * PAG-CREATE AT PAG-ENQUEUE NG BAGONG TICKET:
+     * 1. Ni-la-lock ang thread (ReentrantLock).
+     * 2. Binabasa ang pinakahuling queue number ngayong araw (R-001 o P-001).
+     * 3. Ini-increment ang number (+1), o nagre-reset sa 1 kung bagong araw.
+     * 4. Sine-save sa PostgreSQL database (permanent record).
+     * 5. Ipinapasok sa Binary Heap gamit ang queue.add() -> O(log n).
      */
     public Ticket addTicket(TicketType ticketType) {
-        // ReentrantLock makes the read-number/save/add sequence atomic, preventing
-        // two concurrent requests from receiving the same queue number.
         queueLock.lock();
         try {
-            // Numbering is independent for Regular and Priority queues and resets daily.
             LocalDate today = LocalDate.now();
             LocalDateTime startOfDay = today.atStartOfDay();
             LocalDateTime startOfTomorrow = today.plusDays(1).atStartOfDay();
+
+            // Hanapin ang pinakamalaking queue number ngayong araw para sa specific category
             Ticket lastTicket = ticketRepository
                     .findTopByTicketTypeAndCreatedAtGreaterThanEqualAndCreatedAtLessThanOrderByQueueNumberDesc(
                             ticketType, startOfDay, startOfTomorrow);
+
             int nextQueueNumber = lastTicket == null ? 1 : lastTicket.getQueueNumber() + 1;
-            // I-save muna para magkaroon ng permanenteng record bago idagdag sa active heap.
+
+            // I-persist muna sa DB bago i-enqueue sa binary heap
             Ticket ticket = ticketRepository.save(new Ticket(ticketType, nextQueueNumber));
             queue.add(ticket);
             return ticket;
@@ -74,17 +87,15 @@ public class QueueManager {
     }
 
     /**
-     * Completes the active ticket and serves the next heap-minimum ticket.
-     *
-     * <p>TIME COMPLEXITY: O(log n) for removal from the binary heap; peeking is
-     * O(1). The returned Optional explicitly represents an empty queue.</p>
+     * PAGTAWAG SA SUSUNOD NA TICKET (CALL NEXT):
+     * 1. Kung may kasalukuyang sineserbisyuhan (currentTicket), iminamarka itong 'COMPLETED'.
+     * 2. Tinatawag ang queue.removeNext() na nag-aalis sa root ng Binary Heap -> O(log n).
+     * 3. Ang tinanggal na ticket ang nagiging bagong 'currentTicket' na may status na 'SERVING'.
+     * 4. Kung wala nang tao sa heap, nagiging null ang currentTicket.
      */
     public Optional<Ticket> pollNext() {
-        // The lock prevents staff requests from racing while currentTicket and
-        // the heap are updated together.
         queueLock.lock();
         try {
-            // The previous ticket is completed before the next highest-priority ticket is served.
             if (currentTicket != null) {
                 currentTicket.complete();
                 ticketRepository.save(currentTicket);
@@ -96,7 +107,6 @@ public class QueueManager {
                 return Optional.empty();
             }
 
-            // Ang ticket ay wala na sa waiting heap; mula ngayon, ito na ang active ticket.
             next.startServing(LocalDateTime.now());
             currentTicket = ticketRepository.save(next);
             return Optional.of(currentTicket);
@@ -106,10 +116,9 @@ public class QueueManager {
     }
 
     /**
-     * Marks the currently serving ticket as a no-show.
-     *
-     * <p>TIME COMPLEXITY: O(1), excluding the database update. Locking keeps
-     * skip behavior consistent with simultaneous next/recall requests.</p>
+     * NO-SHOW / SKIP TICKET:
+     * Minamarkahan ang kasalukuyang ticket bilang 'NO_SHOW' kapag hindi sumipot
+     * ang estudyante pagkatapos tawagin.
      */
     public Optional<Ticket> skipCurrent() {
         queueLock.lock();
@@ -127,10 +136,8 @@ public class QueueManager {
     }
 
     /**
-     * Returns the active ticket without changing queue state.
-     *
-     * <p>TIME COMPLEXITY: O(1); the lock provides a consistent read of the
-     * mutable current-ticket reference.</p>
+     * RECALL CURRENT TICKET:
+     * Binabasa ang kasalukuyang aktibong ticket para muling i-anunsyo ng audio nang hindi binabago ang pila.
      */
     public Optional<Ticket> recallCurrent() {
         queueLock.lock();
@@ -142,24 +149,22 @@ public class QueueManager {
     }
 
     /**
-     * Retrieves today's completed and no-show tickets in reverse service order.
-     *
-     * <p>TIME COMPLEXITY: database-dependent, typically O(log n + h) with a
-     * suitable index, where h is the number of returned history rows.</p>
+     * SERVING HISTORY:
+     * Kumukuha ng listahan ng mga natapos (COMPLETED) at hindi sumipot (NO_SHOW) ngayong araw mula sa database.
      */
     public List<Ticket> getHistory() {
-        // The LocalDate range starts at midnight, limiting history to today
-        // while preserving older records for future reporting.
         LocalDateTime start = LocalDate.now().atStartOfDay();
         return ticketRepository.findByStatusInAndServedAtGreaterThanEqualOrderByServedAtDesc(
                 List.of(TicketStatus.COMPLETED, TicketStatus.NO_SHOW), start);
     }
 
     /**
-     * Builds one consistent view for staff, kiosk, and monitor clients.
-     *
-     * <p>TIME COMPLEXITY: O(n log n) because the heap is copied and sorted for
-     * display; counting ticket types is O(n). The lock prevents a partial view.</p>
+     * LIVE QUEUE SNAPSHOT:
+     * Kinukuha ang pinagsamang estado para sa mga monitor at kiosk:
+     * - Sino ang kasalukuyang sineserbisyuhan
+     * - Ilan ang naghihintay
+     * - Listahan ng susunod na 5 tao sa pila (mula sa heap sorted copy)
+     * - Bilang ng Regular vs Priority
      */
     public QueueSnapshot getSnapshot() {
         queueLock.lock();
@@ -175,10 +180,7 @@ public class QueueManager {
     }
 
     /**
-     * Immutable response model containing the active ticket and waiting metrics.
-     *
-     * <p>Using a record demonstrates encapsulation for a read-only snapshot while
-     * the domain entity remains responsible for ticket state transitions.</p>
+     * Snapshot record na ipinapadala sa mga client sa pamamagitan ng JSON.
      */
     public record QueueSnapshot(
             Ticket current, int waitingCount, List<Ticket> waiting, Map<TicketType, Long> waitingByType) {
