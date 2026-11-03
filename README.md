@@ -149,9 +149,9 @@ cd HERONQUEUE
 ```
 
 Once started, open your browser:
-- **Kiosk:** [http://localhost:8080/kiosk.html](http://localhost:8080/kiosk.html)
-- **Staff Console:** [http://localhost:8080/staff.html](http://localhost:8080/staff.html)
-- **Public Monitor:** [http://localhost:8080/monitor.html](http://localhost:8080/monitor.html)
+- **Kiosk:** [https://heronqueue.onrender.com/kiosk.html](https://heronqueue.onrender.com/kiosk.html)
+- **Staff Console:** [https://heronqueue.onrender.com/staff.html](https://heronqueue.onrender.com/staff.html)
+- **Public Monitor:** [https://heronqueue.onrender.com/monitor.html](https://heronqueue.onrender.com/monitor.html)
 
 ---
 
