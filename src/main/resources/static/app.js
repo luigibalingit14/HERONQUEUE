@@ -92,6 +92,142 @@ function startRefreshLoop(refresh, interval) {
 }
 
 /**
+ * Creates a branded, one-page PDF from the UMak ticket artwork already on the
+ * kiosk page, then downloads it without requiring a print dialog.
+ */
+async function downloadTicketPdf(ticket, peopleAhead) {
+  const seal = document.querySelector('.print-ticket-seal');
+  const wordmark = document.querySelector('.print-ticket-wordmark');
+  if (!seal || !wordmark) throw new Error('Ticket logo assets are unavailable.');
+  await Promise.all([seal.decode(), wordmark.decode()]);
+
+  const canvas = document.createElement('canvas');
+  canvas.width = 1200;
+  canvas.height = 1697;
+  const context = canvas.getContext('2d');
+  if (!context) throw new Error('Unable to render the ticket PDF.');
+
+  context.fillStyle = '#ffffff';
+  context.fillRect(0, 0, canvas.width, canvas.height);
+  context.fillStyle = '#f5ec3a';
+  context.fillRect(0, 0, canvas.width, 16);
+
+  const drawContained = (image, x, y, maxWidth, maxHeight) => {
+    const scale = Math.min(maxWidth / image.naturalWidth, maxHeight / image.naturalHeight);
+    const width = image.naturalWidth * scale;
+    const height = image.naturalHeight * scale;
+    context.drawImage(image, x + (maxWidth - width) / 2, y + (maxHeight - height) / 2, width, height);
+  };
+
+  drawContained(seal, 510, 64, 180, 180);
+  drawContained(wordmark, 190, 272, 820, 130);
+  context.fillStyle = '#105389';
+  context.font = '700 28px Arial, sans-serif';
+  context.textAlign = 'center';
+  context.fillText('HERONQUEUE  |  STUDENT SERVICES', 600, 452);
+
+  context.fillStyle = '#111c4e';
+  context.font = '700 36px Arial, sans-serif';
+  context.fillText('YOUR QUEUE TICKET', 600, 565);
+  context.font = '700 144px Arial, sans-serif';
+  context.fillText(ticket.displayCode, 600, 750);
+  context.fillStyle = '#f5ec3a';
+  context.fillRect(120, 805, 960, 8);
+
+  const rows = [
+    ['QUEUE LANE', `${ticket.ticketType} QUEUE`],
+    ['DATE AND TIME ISSUED', new Date(ticket.createdAt).toLocaleString('en-PH', {
+      dateStyle: 'long',
+      timeStyle: 'short'
+    })],
+    ['PEOPLE AHEAD WHEN ISSUED', String(peopleAhead)],
+    ['STATUS', 'WAITING']
+  ];
+  context.textAlign = 'left';
+  rows.forEach(([label, value], index) => {
+    const y = 930 + index * 132;
+    context.fillStyle = '#5d6680';
+    context.font = '600 27px Arial, sans-serif';
+    context.fillText(label, 140, y);
+    context.fillStyle = '#111c4e';
+    context.font = '700 32px Arial, sans-serif';
+    context.textAlign = 'right';
+    context.fillText(value, 1060, y);
+    context.textAlign = 'left';
+    context.fillStyle = '#e8eaf0';
+    context.fillRect(140, y + 34, 920, 2);
+  });
+
+  context.fillStyle = '#f5f6fa';
+  context.fillRect(100, 1510, 1000, 110);
+  context.fillStyle = '#424a60';
+  context.font = '24px Arial, sans-serif';
+  context.textAlign = 'center';
+  context.fillText('Please keep this ticket number and watch the queue display.', 600, 1555);
+  context.fillText('Have your ticket ready when your number is called.', 600, 1595);
+
+  const jpeg = await new Promise((resolve, reject) => {
+    canvas.toBlob((blob) => {
+      if (blob) resolve(blob);
+      else reject(new Error('Unable to create the ticket PDF image.'));
+    }, 'image/jpeg', 0.94);
+  });
+  const imageBytes = new Uint8Array(await jpeg.arrayBuffer());
+  const encoder = new TextEncoder();
+  const chunks = [];
+  let byteLength = 0;
+  const append = (bytes) => {
+    chunks.push(bytes);
+    byteLength += bytes.length;
+  };
+  const appendText = (text) => append(encoder.encode(text));
+  const offsets = [0];
+
+  appendText('%PDF-1.4\n%\xE2\xE3\xCF\xD3\n');
+  const addObject = (number, parts) => {
+    offsets[number] = byteLength;
+    appendText(`${number} 0 obj\n`);
+    parts.forEach((part) => typeof part === 'string' ? appendText(part) : append(part));
+    appendText('\nendobj\n');
+  };
+  addObject(1, ['<< /Type /Catalog /Pages 2 0 R >>']);
+  addObject(2, ['<< /Type /Pages /Kids [3 0 R] /Count 1 >>']);
+  addObject(3, [
+    '<< /Type /Page /Parent 2 0 R /MediaBox [0 0 419.53 595.28] ',
+    '/Resources << /XObject << /Im0 4 0 R >> >> /Contents 5 0 R >>'
+  ]);
+  addObject(4, [
+    `<< /Type /XObject /Subtype /Image /Width ${canvas.width} /Height ${canvas.height} `,
+    `/ColorSpace /DeviceRGB /BitsPerComponent 8 /Filter /DCTDecode /Length ${imageBytes.length} >>\nstream\n`,
+    imageBytes,
+    '\nendstream'
+  ]);
+  const pageContent = encoder.encode('q 419.53 0 0 595.28 0 0 cm /Im0 Do Q');
+  addObject(5, [
+    `<< /Length ${pageContent.length} >>\nstream\n`,
+    pageContent,
+    '\nendstream'
+  ]);
+
+  const xrefOffset = byteLength;
+  appendText('xref\n0 6\n0000000000 65535 f \n');
+  for (let number = 1; number <= 5; number += 1) {
+    appendText(`${String(offsets[number]).padStart(10, '0')} 00000 n \n`);
+  }
+  appendText(`trailer\n<< /Size 6 /Root 1 0 R >>\nstartxref\n${xrefOffset}\n%%EOF`);
+
+  const pdf = new Blob(chunks, { type: 'application/pdf' });
+  const url = URL.createObjectURL(pdf);
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = `HeronQueue-${ticket.displayCode}.pdf`;
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+  window.setTimeout(() => URL.revokeObjectURL(url), 60000);
+}
+
+/**
  * Joins a selected queue, renders the generated ticket, and calculates
  * position from the server's priority-ordered waiting array.
  * Includes immediate anti-spam locking and persistent cooldown protection.
@@ -140,14 +276,25 @@ async function joinQueue(ticketType) {
     }
 
     // The second awaited API call ensures the position uses current server data.
-    const status = await request('/status');
-    const ahead = status.waiting.findIndex((item) => item.id === ticket.id);
-    const aheadEl = document.querySelector('#peopleAhead');
-    const peopleAhead = Math.max(ahead, 0);
-    if (aheadEl) aheadEl.textContent = peopleAhead;
-    if (receiptPeopleAhead) receiptPeopleAhead.textContent = peopleAhead;
+    let peopleAhead = '-';
+    try {
+      const status = await request('/status');
+      const ahead = status.waiting.findIndex((item) => item.id === ticket.id);
+      peopleAhead = Math.max(ahead, 0);
+      const aheadEl = document.querySelector('#peopleAhead');
+      if (aheadEl) aheadEl.textContent = peopleAhead;
+      if (receiptPeopleAhead) receiptPeopleAhead.textContent = peopleAhead;
+    } catch (error) {
+      console.error('Ticket created, but queue position could not be refreshed.', error);
+    }
 
-    showToast('Your place is secured. You can print or save your ticket as a PDF.');
+    try {
+      await downloadTicketPdf(ticket, peopleAhead);
+      showToast('Your ticket PDF was downloaded automatically.');
+    } catch (error) {
+      showToast('Ticket created, but the PDF could not be downloaded. Please print another copy.');
+      console.error(error);
+    }
   } catch (error) {
     if (error.status === 429) {
       showToast('Please wait a moment before requesting another ticket.');
