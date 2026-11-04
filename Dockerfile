@@ -14,4 +14,4 @@ RUN useradd --system --uid 10001 spring
 COPY --from=build /workspace/target/heronqueue-0.0.1-SNAPSHOT.jar app.jar
 USER 10001
 EXPOSE 8080
-ENTRYPOINT ["java", "-XX:MaxRAMPercentage=75.0", "-jar", "/app/app.jar"]
+ENTRYPOINT ["java", "-Duser.timezone=Asia/Manila", "-XX:MaxRAMPercentage=75.0", "-jar", "/app/app.jar"]

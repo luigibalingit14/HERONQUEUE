@@ -1,7 +1,13 @@
 const API_BASE = '/api/queue';
+const PHILIPPINE_TIME_ZONE = 'Asia/Manila';
 let joiningQueue = false;
 let callingNext = false;
 let staffActionBusy = false;
+
+function parsePhilippineDateTime(value) {
+  const timestamp = /(?:Z|[+-]\d{2}:?\d{2})$/i.test(value) ? value : `${value}+08:00`;
+  return new Date(timestamp);
+}
 
 // Iisang API helper ang ginagamit ng kiosk, staff dashboard, at public monitor.
 
@@ -136,9 +142,10 @@ async function downloadTicketPdf(ticket, peopleAhead) {
 
   const rows = [
     ['QUEUE LANE', `${ticket.ticketType} QUEUE`],
-    ['DATE AND TIME ISSUED', new Date(ticket.createdAt).toLocaleString('en-PH', {
+    ['DATE AND TIME ISSUED', parsePhilippineDateTime(ticket.createdAt).toLocaleString('en-PH', {
       dateStyle: 'long',
-      timeStyle: 'short'
+      timeStyle: 'short',
+      timeZone: PHILIPPINE_TIME_ZONE
     })],
     ['PEOPLE AHEAD WHEN ISSUED', String(peopleAhead)],
     ['STATUS', 'WAITING']
@@ -259,9 +266,10 @@ async function joinQueue(ticketType) {
     if (receiptTicketCode) receiptTicketCode.textContent = ticket.displayCode;
     if (receiptQueueType) receiptQueueType.textContent = `${ticket.ticketType} QUEUE`;
     if (receiptCreatedAt) {
-      receiptCreatedAt.textContent = new Date(ticket.createdAt).toLocaleString('en-PH', {
+      receiptCreatedAt.textContent = parsePhilippineDateTime(ticket.createdAt).toLocaleString('en-PH', {
         dateStyle: 'long',
-        timeStyle: 'short'
+        timeStyle: 'short',
+        timeZone: PHILIPPINE_TIME_ZONE
       });
     }
     if (receiptPeopleAhead) receiptPeopleAhead.textContent = '-';
@@ -502,7 +510,13 @@ async function refreshHistory() {
     history.filter((ticket) => ticket.displayCode.includes(query)).slice(0, 10).forEach((ticket) => {
       const item = document.createElement('div');
       item.className = 'history-item';
-      const time = ticket.servedAt ? new Date(ticket.servedAt).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' }) : '—';
+      const time = ticket.servedAt
+        ? parsePhilippineDateTime(ticket.servedAt).toLocaleTimeString('en-PH', {
+          hour: 'numeric',
+          minute: '2-digit',
+          timeZone: PHILIPPINE_TIME_ZONE
+        })
+        : '—';
       item.innerHTML = `<strong>${ticket.displayCode}</strong><span>${ticket.status === 'NO_SHOW' ? 'No-show' : 'Completed'}</span><time>${time}</time>`;
       list.appendChild(item);
     });
@@ -582,7 +596,8 @@ function updateMonitorClock() {
     clock.textContent = new Intl.DateTimeFormat('en-PH', {
       hour: 'numeric',
       minute: '2-digit',
-      hour12: true
+      hour12: true,
+      timeZone: PHILIPPINE_TIME_ZONE
     }).format(new Date());
   }
 }
