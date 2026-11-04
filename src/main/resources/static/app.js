@@ -115,6 +115,22 @@ async function joinQueue(ticketType) {
     if (ticketCodeEl) ticketCodeEl.textContent = ticket.displayCode;
     if (ticketTypeEl) ticketTypeEl.textContent = `${ticket.ticketType} QUEUE`;
 
+    const printTicket = document.querySelector('#printTicket');
+    const receiptTicketCode = document.querySelector('#receiptTicketCode');
+    const receiptQueueType = document.querySelector('#receiptQueueType');
+    const receiptCreatedAt = document.querySelector('#receiptCreatedAt');
+    const receiptPeopleAhead = document.querySelector('#receiptPeopleAhead');
+    if (receiptTicketCode) receiptTicketCode.textContent = ticket.displayCode;
+    if (receiptQueueType) receiptQueueType.textContent = `${ticket.ticketType} QUEUE`;
+    if (receiptCreatedAt) {
+      receiptCreatedAt.textContent = new Date(ticket.createdAt).toLocaleString('en-PH', {
+        dateStyle: 'long',
+        timeStyle: 'short'
+      });
+    }
+    if (receiptPeopleAhead) receiptPeopleAhead.textContent = '-';
+    if (printTicket) printTicket.hidden = false;
+
     // Highlight the ticket card visually to signal clear completion
     const ticketOutput = document.querySelector('.ticket-output');
     if (ticketOutput) {
@@ -127,9 +143,11 @@ async function joinQueue(ticketType) {
     const status = await request('/status');
     const ahead = status.waiting.findIndex((item) => item.id === ticket.id);
     const aheadEl = document.querySelector('#peopleAhead');
-    if (aheadEl) aheadEl.textContent = Math.max(ahead, 0);
+    const peopleAhead = Math.max(ahead, 0);
+    if (aheadEl) aheadEl.textContent = peopleAhead;
+    if (receiptPeopleAhead) receiptPeopleAhead.textContent = peopleAhead;
 
-    showToast('Your place is secured. Please take note of your number.');
+    showToast('Your place is secured. You can print or save your ticket as a PDF.');
   } catch (error) {
     if (error.status === 429) {
       showToast('Please wait a moment before requesting another ticket.');
@@ -458,6 +476,8 @@ document.querySelectorAll('[data-ticket-type]').forEach((button) => {
   // Ang button value ang nagsasabi kung REGULAR o PRIORITY ang ipapasok sa queue.
   button.addEventListener('click', () => joinQueue(button.dataset.ticketType));
 });
+
+document.querySelector('#printTicket')?.addEventListener('click', () => window.print());
 
 document.querySelector('#callNext')?.addEventListener('click', callNext);
 
