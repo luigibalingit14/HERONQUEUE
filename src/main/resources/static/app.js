@@ -101,7 +101,7 @@ function startRefreshLoop(refresh, interval) {
  * Creates a branded, one-page PDF from the UMak ticket artwork already on the
  * kiosk page, then downloads it without requiring a print dialog.
  */
-async function downloadTicketPdf(ticket, peopleAhead) {
+async function downloadTicketPdf(ticket, peopleAhead, generatedAt) {
   const seal = document.querySelector('.print-ticket-seal');
   const wordmark = document.querySelector('.print-ticket-wordmark');
   if (!seal || !wordmark) throw new Error('Ticket logo assets are unavailable.');
@@ -140,6 +140,39 @@ async function downloadTicketPdf(ticket, peopleAhead) {
   context.fillStyle = '#f5ec3a';
   context.fillRect(120, 805, 960, 8);
 
+  const isPriority = ticket.ticketType === 'PRIORITY';
+  if (isPriority) {
+    const note = 'Para sa PWD / Senior Citizen / Buntis lamang. Ipakita ang valid ID sa counter bago ang serbisyo. WALANG VALID ID? FORFEITED ito — kumuha ng BAGONG REGULAR ticket sa kiosk (sa dulo ng pila). / No valid ID? Forfeited — get a NEW REGULAR ticket at the kiosk (end of the line).';
+    const noteX = 120;
+    const noteY = 838;
+    const noteWidth = 960;
+    const noteHeight = 236;
+    context.fillStyle = '#fff8e6';
+    context.fillRect(noteX, noteY, noteWidth, noteHeight);
+    context.strokeStyle = '#b7791f';
+    context.lineWidth = 4;
+    context.strokeRect(noteX, noteY, noteWidth, noteHeight);
+    context.textAlign = 'left';
+    context.fillStyle = '#68460a';
+    context.font = '700 24px Arial, sans-serif';
+    context.fillText('⚠️ ID REQUIRED / KAILANGAN NG VALID ID', noteX + 24, noteY + 38);
+    context.font = '20px Arial, sans-serif';
+    const words = note.split(/\s+/);
+    const lines = [];
+    let line = '';
+    words.forEach((word) => {
+      const candidate = line ? `${line} ${word}` : word;
+      if (line && context.measureText(candidate).width > noteWidth - 48) {
+        lines.push(line);
+        line = word;
+      } else {
+        line = candidate;
+      }
+    });
+    if (line) lines.push(line);
+    lines.forEach((text, index) => context.fillText(text, noteX + 24, noteY + 74 + index * 29));
+  }
+
   const rows = [
     ['QUEUE LANE', `${ticket.ticketType} QUEUE`],
     ['DATE AND TIME ISSUED', parsePhilippineDateTime(ticket.createdAt).toLocaleString('en-PH', {
@@ -152,7 +185,7 @@ async function downloadTicketPdf(ticket, peopleAhead) {
   ];
   context.textAlign = 'left';
   rows.forEach(([label, value], index) => {
-    const y = 930 + index * 132;
+    const y = (isPriority ? 1110 : 930) + index * (isPriority ? 100 : 132);
     context.fillStyle = '#5d6680';
     context.font = '600 27px Arial, sans-serif';
     context.fillText(label, 140, y);
@@ -166,12 +199,28 @@ async function downloadTicketPdf(ticket, peopleAhead) {
   });
 
   context.fillStyle = '#f5f6fa';
-  context.fillRect(100, 1510, 1000, 110);
+  context.fillRect(100, 1510, 1000, 175);
   context.fillStyle = '#424a60';
-  context.font = '24px Arial, sans-serif';
+  context.font = '22px Arial, sans-serif';
   context.textAlign = 'center';
-  context.fillText('Please keep this ticket number and watch the queue display.', 600, 1555);
-  context.fillText('Have your ticket ready when your number is called.', 600, 1595);
+  context.fillText(isPriority
+    ? 'Keep your ticket number and watch the queue display.'
+    : 'Abangan ang numero sa monitor. Non-transferable.', 600, 1545);
+  context.font = '18px Arial, sans-serif';
+  const finePrint = `Terms: https://heronqueue.onrender.com/terms.html • All transactions are logged • Generated: ${generatedAt}`;
+  const finePrintLines = [];
+  let finePrintLine = '';
+  finePrint.split(/\s+/).forEach((word) => {
+    const candidate = finePrintLine ? `${finePrintLine} ${word}` : word;
+    if (finePrintLine && context.measureText(candidate).width > 940) {
+      finePrintLines.push(finePrintLine);
+      finePrintLine = word;
+    } else {
+      finePrintLine = candidate;
+    }
+  });
+  if (finePrintLine) finePrintLines.push(finePrintLine);
+  finePrintLines.forEach((line, index) => context.fillText(line, 600, 1600 + index * 26));
 
   const jpeg = await new Promise((resolve, reject) => {
     canvas.toBlob((blob) => {
@@ -263,8 +312,25 @@ async function joinQueue(ticketType) {
     const receiptQueueType = document.querySelector('#receiptQueueType');
     const receiptCreatedAt = document.querySelector('#receiptCreatedAt');
     const receiptPeopleAhead = document.querySelector('#receiptPeopleAhead');
+    const receiptPriorityNote = document.querySelector('#receiptPriorityNote');
+    const receiptFooterMessage = document.querySelector('#receiptFooterMessage');
+    const receiptFinePrint = document.querySelector('#receiptFinePrint');
+    const generatedAt = new Intl.DateTimeFormat('en-PH', {
+      dateStyle: 'medium',
+      timeStyle: 'short',
+      timeZone: PHILIPPINE_TIME_ZONE
+    }).format(new Date());
     if (receiptTicketCode) receiptTicketCode.textContent = ticket.displayCode;
     if (receiptQueueType) receiptQueueType.textContent = `${ticket.ticketType} QUEUE`;
+    if (receiptPriorityNote) receiptPriorityNote.hidden = ticket.ticketType !== 'PRIORITY';
+    if (receiptFooterMessage) {
+      receiptFooterMessage.textContent = ticket.ticketType === 'REGULAR'
+        ? 'Abangan ang numero sa monitor. Non-transferable.'
+        : 'Keep your ticket number and watch the queue display.';
+    }
+    if (receiptFinePrint) {
+      receiptFinePrint.textContent = `Terms: https://heronqueue.onrender.com/terms.html • All transactions are logged • Generated: ${generatedAt}`;
+    }
     if (receiptCreatedAt) {
       receiptCreatedAt.textContent = parsePhilippineDateTime(ticket.createdAt).toLocaleString('en-PH', {
         dateStyle: 'long',
@@ -297,7 +363,7 @@ async function joinQueue(ticketType) {
     }
 
     try {
-      await downloadTicketPdf(ticket, peopleAhead);
+      await downloadTicketPdf(ticket, peopleAhead, generatedAt);
       showToast('Your ticket PDF was downloaded automatically.');
     } catch (error) {
       showToast('Ticket created, but the PDF could not be downloaded. Please print another copy.');
@@ -416,6 +482,10 @@ async function refreshKiosk() {
 async function refreshStaff() {
   try {
     const status = await request('/status');
+    const priorityReminder = document.querySelector('#priorityIdReminder');
+    if (priorityReminder) {
+      priorityReminder.hidden = status.current?.ticketType !== 'PRIORITY';
+    }
     document.querySelector('#waitingCount').textContent = status.waitingCount;
     document.querySelector('#nowServing').textContent = status.current?.displayCode || '—';
     document.querySelector('#priorityCount').textContent = status.waitingByType.PRIORITY || 0;
@@ -636,7 +706,31 @@ async function refreshMonitor() {
 // Attach event listeners
 document.querySelectorAll('[data-ticket-type]').forEach((button) => {
   // Ang button value ang nagsasabi kung REGULAR o PRIORITY ang ipapasok sa queue.
-  button.addEventListener('click', () => joinQueue(button.dataset.ticketType));
+  button.addEventListener('click', () => {
+    if (button.dataset.ticketType === 'PRIORITY') {
+      const dialog = document.querySelector('#priorityConfirm');
+      const checkbox = document.querySelector('#priorityConfirmCheck');
+      const confirmButton = document.querySelector('#priorityConfirmSubmit');
+      if (!dialog || !checkbox || !confirmButton) return;
+      checkbox.checked = false;
+      confirmButton.disabled = true;
+      dialog.showModal();
+      return;
+    }
+    joinQueue(button.dataset.ticketType);
+  });
+});
+
+document.querySelector('#priorityConfirmCheck')?.addEventListener('change', (event) => {
+  document.querySelector('#priorityConfirmSubmit').disabled = !event.currentTarget.checked;
+});
+document.querySelector('#priorityConfirmCancel')?.addEventListener('click', () => {
+  document.querySelector('#priorityConfirm').close();
+});
+document.querySelector('#priorityConfirmSubmit')?.addEventListener('click', (event) => {
+  if (event.currentTarget.disabled) return;
+  document.querySelector('#priorityConfirm').close();
+  joinQueue('PRIORITY');
 });
 
 document.querySelector('#printTicket')?.addEventListener('click', () => window.print());

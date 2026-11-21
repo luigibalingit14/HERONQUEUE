@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>HeronQueue | Terms &amp; Priority-Lane Policy</title>
+  <link rel="icon" type="image/png" href="assets/logos/umak-logo-black.png">
+  <link rel="stylesheet" href="assets/theme.css">
+  <link rel="stylesheet" href="styles.css">
+  <style>
+    .terms-page { color: #222; background: var(--umak-surface); }
+    .terms-page .topbar { color: #fff; background: var(--umak-primary); }
+    .terms-shell { max-width: 900px; margin: auto; padding: 48px 6vw 72px; }
+    .terms-shell h1 { margin: 0 0 12px; color: var(--umak-primary); font-size: clamp(2rem, 5vw, 3.5rem); }
+    .terms-intro { margin: 0 0 28px; color: #68718a; line-height: 1.6; }
+    .terms-list { display: grid; gap: 16px; padding: 0; list-style: none; counter-reset: policy; }
+    .terms-list li { padding: 20px 22px; border: 1px solid rgba(17,28,78,.08); border-radius: 16px; background: #fff; box-shadow: 0 10px 28px rgba(17,28,78,.06); counter-increment: policy; }
+    .terms-list li::before { display: block; margin-bottom: 8px; color: var(--umak-tertiary); font-weight: 800; content: counter(policy) ". POLICY / PATAKARAN"; }
+    .terms-list p { margin: 0; line-height: 1.65; }
+    .terms-list p + p { margin-top: 10px; color: #59627a; }
+    .terms-back { display: inline-block; margin-top: 22px; color: var(--umak-tertiary); font-weight: 700; }
+  </style>
+</head>
+<body class="terms-page">
+  <header class="topbar">
+    <div class="brand">
+      <img class="brand-logo" src="assets/logos/PNGs/UMak Logo - White R.png" alt="University of Makati logo">
+      <span class="brand-copy"><strong>HERONQUEUE</strong><small>University of Makati</small></span>
+    </div>
+    <span class="eyebrow">Queue terms</span>
+  </header>
+  <main class="terms-shell">
+    <h1>Queue Terms &amp; Priority-Lane Policy</h1>
+    <p class="terms-intro">Please read these rules before getting a ticket. / Basahin ang mga patakaran bago kumuha ng ticket.</p>
+    <ol class="terms-list">
+      <li>
+        <p>The priority lane is only for persons with disabilities (PWD), senior citizens, and pregnant students. / Para lamang sa mga PWD, senior citizen, at buntis na estudyante ang priority lane.</p>
+      </li>
+      <li>
+        <p>Show a valid ID at the counter before service. A ticket is a queue claim, not proof of eligibility. / Ipakita sa counter ang valid ID bago asikasuhin. Katibayan lamang ng puwesto sa pila ang ticket, hindi ito patunay ng eligibility.</p>
+      </li>
+      <li>
+        <p>Without a valid ID, the priority ticket is forfeited. Get a new REGULAR ticket at the kiosk; it joins the end of the line. / Kung walang valid ID, forfeited ang priority ticket. Kumuha ng bagong REGULAR ticket sa kiosk; sa dulo ito ng pila mapupunta.</p>
+      </li>
+      <li>
+        <p>One ticket is for one transaction only and cannot be transferred. All transactions are logged. / Isang ticket para sa isang transaksyon lamang at hindi ito maaaring ipasa sa iba. Nila-log ang lahat ng transaksyon.</p>
+      </li>
+      <li>
+        <p>Public monitors display ticket codes only and do not show personal details. / Mga ticket code lamang ang ipinapakita sa mga monitor; walang personal na detalye.</p>
+      </li>
+    </ol>
+    <a class="terms-back" href="kiosk.html">Back to kiosk / Bumalik sa kiosk</a>
+  </main>
+</body>
+</html>

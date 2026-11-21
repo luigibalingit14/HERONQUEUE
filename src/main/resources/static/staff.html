@@ -9,6 +9,10 @@
   <link rel="stylesheet" href="assets/theme.css">
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,400,0,0">
   <link rel="stylesheet" href="styles.css?v=20261103-antispam">
+  <style>
+    .priority-id-reminder { margin: 0 0 12px; padding: 12px 14px; color: #68460a; border: 1px solid #f1cf75; border-radius: 12px; background: #fff7df; font-size: .78rem; line-height: 1.5; }
+    .priority-id-reminder[hidden] { display: none; }
+  </style>
 </head>
 <body class="staff-page">
   <header class="topbar">
@@ -44,6 +48,7 @@
           <span>Call next ticket</span>
           <span class="material-symbols-outlined button-arrow">arrow_forward</span>
         </button>
+        <p class="priority-id-reminder" id="priorityIdReminder" hidden>🪪 ID muna bago serbisyo. Walang valid ID? Pindutin ang SKIP, tapos sabihan: 'Kumuha po ng bagong REGULAR ticket sa kiosk.' / Verify ID before serving. No valid ID → SKIP, then advise the student to get a new REGULAR ticket at the kiosk.</p>
         <div class="staff-actions">
           <button class="secondary-button" id="recallTicket"><span class="material-symbols-outlined">campaign</span> Recall</button>
           <button class="danger-button" id="skipTicket"><span class="material-symbols-outlined">person_off</span> No-show</button>
@@ -83,6 +88,6 @@
   </main>
   <div class="secret-trigger" id="secretTrigger" aria-label="Advanced controls"></div>
   <div class="toast" id="toast" role="status"></div>
-  <script src="app.js?v=20261103-antispam"></script>
+  <script src="app.js?v=20261121-priority-policy"></script>
 </body>
 </html>

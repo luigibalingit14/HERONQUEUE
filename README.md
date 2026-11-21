@@ -166,6 +166,10 @@ This repository is pre-configured with a Render Docker Blueprint (`render.yaml`)
   - `SUPABASE_DB_USER`
   - `SUPABASE_DB_PASSWORD`
 
+## Priority-Lane Policy
+
+The priority lane is only for PWDs, senior citizens, and pregnant students, who must show a valid ID at the counter before service; without valid ID the priority ticket is forfeited and the student must get a new REGULAR ticket at the kiosk, which joins the end of the line. Staff use the existing Skip / No-Show action for a forfeited ticket, and that outcome is logged as `NO_SHOW`.
+
 ---
 
 ## 📜 Academic Attribution & Copyright Notice

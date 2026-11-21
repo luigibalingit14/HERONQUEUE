@@ -9,6 +9,27 @@
   <link rel="stylesheet" href="assets/theme.css">
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,400,0,0">
   <link rel="stylesheet" href="styles.css?v=20261105-ticket-auto-download">
+  <style>
+    .priority-confirm { width: min(560px, calc(100% - 32px)); padding: 28px; color: #111c4e; border: 0; border-radius: 20px; box-shadow: 0 24px 80px rgba(4,9,35,.38); }
+    .priority-confirm::backdrop { background: rgba(8,14,44,.72); }
+    .priority-confirm h2 { margin: 0 0 14px; font-size: 1.35rem; }
+    .priority-confirm p { line-height: 1.6; }
+    .priority-confirm label { display: flex; gap: 10px; align-items: flex-start; margin: 20px 0; font-weight: 700; }
+    .priority-confirm input { width: 20px; height: 20px; flex: 0 0 auto; accent-color: #105389; }
+    .priority-confirm-actions { display: flex; justify-content: flex-end; gap: 10px; }
+    .priority-confirm-actions button { padding: 11px 16px; border: 0; border-radius: 10px; font-weight: 700; }
+    .priority-confirm-cancel { color: #111c4e; background: #e8eaf0; }
+    .priority-confirm-submit { color: #fff; background: #105389; }
+    .priority-confirm-submit:disabled { cursor: not-allowed; opacity: .5; }
+    .kiosk-footer { padding: 0 20px 28px; text-align: center; }
+    .kiosk-footer a { color: #fff; font-size: .85rem; }
+    .print-ticket-policy { margin: 14px 0; padding: 10px 12px; border: 2px solid #b7791f; border-radius: 8px; background: #fff8e6; color: #553b0b; font-size: 8.5pt; line-height: 1.4; text-align: left; }
+    .print-ticket-policy[hidden] { display: none; }
+    .print-ticket-fineprint { margin-top: 8px; font-size: 7pt; }
+    @media print {
+      .print-ticket-policy { break-inside: avoid; }
+    }
+  </style>
 </head>
 <body class="kiosk-page">
   <header class="topbar">
@@ -28,7 +49,7 @@
         <button class="queue-button" data-ticket-type="REGULAR">
           <span class="material-symbols-outlined">confirmation_number</span>
           <strong>Regular queue</strong>
-          <span>Standard service lane</span>
+          <span>Standard service lane<br>Regular lane • Non-transferable.</span>
         </button>
         <button class="queue-button priority" data-ticket-type="PRIORITY">
           <span class="material-symbols-outlined">bolt</span>
@@ -54,6 +75,7 @@
       <button class="ticket-print-button" id="printTicket" type="button" hidden>Print another copy</button>
     </section>
   </main>
+  <footer class="kiosk-footer"><a href="terms.html">Terms &amp; priority-lane policy</a></footer>
   <article class="print-ticket" id="printTicketContent" hidden>
     <header class="print-ticket-brand">
       <img class="print-ticket-seal" src="assets/logos/PNGs/UMak Logo - Black R.png" alt="University of Makati seal">
@@ -64,6 +86,12 @@
       <p class="print-ticket-label">Your queue ticket</p>
       <strong class="print-ticket-code" id="receiptTicketCode">-</strong>
       <div class="print-ticket-divider"></div>
+      <div class="print-ticket-policy" id="receiptPriorityNote" hidden>
+        <strong>⚠️ ID REQUIRED / KAILANGAN NG VALID ID</strong> — Para sa PWD / Senior Citizen / Buntis lamang.
+        Ipakita ang valid ID sa counter bago ang serbisyo. WALANG VALID ID? FORFEITED ito — kumuha ng BAGONG
+        REGULAR ticket sa kiosk (sa dulo ng pila). / No valid ID? Forfeited — get a NEW REGULAR ticket at the
+        kiosk (end of the line).
+      </div>
       <dl>
         <div><dt>Queue lane</dt><dd id="receiptQueueType">-</dd></div>
         <div><dt>Date and time issued</dt><dd id="receiptCreatedAt">-</dd></div>
@@ -72,10 +100,23 @@
       </dl>
     </section>
     <footer class="print-ticket-footer">
-      Please keep this ticket number and watch the queue display. Have your ticket ready when your number is called.
+      <span id="receiptFooterMessage">Please keep this ticket number and watch the queue display. Have your ticket ready when your number is called.</span>
+      <div class="print-ticket-fineprint" id="receiptFinePrint"></div>
     </footer>
   </article>
+  <dialog class="priority-confirm" id="priorityConfirm" aria-labelledby="priorityConfirmTitle">
+    <h2 id="priorityConfirmTitle">Priority lane confirmation</h2>
+    <p>⚠️ Ang Priority lane ay para LAMANG sa PWD, Senior Citizen, at Buntis. Kailangan ng VALID ID sa counter. Kung wala: forfeited ang ticket at kailangan mong kumuha ng BAGONG REGULAR ticket sa kiosk — sa DULO ng pila. / Priority lane is for PWD, Senior Citizens, and Pregnant students only. Valid ID required at the counter. No valid ID = ticket forfeited; get a NEW REGULAR ticket at the kiosk (end of the line).</p>
+    <label for="priorityConfirmCheck">
+      <input id="priorityConfirmCheck" type="checkbox">
+      <span>Naiintindihan ko. / I understand.</span>
+    </label>
+    <div class="priority-confirm-actions">
+      <button class="priority-confirm-cancel" id="priorityConfirmCancel" type="button">Cancel</button>
+      <button class="priority-confirm-submit" id="priorityConfirmSubmit" type="button" disabled>Confirm priority</button>
+    </div>
+  </dialog>
   <div class="toast" id="toast" role="status"></div>
-  <script src="app.js?v=20261105-ticket-auto-download"></script>
+  <script src="app.js?v=20261121-priority-policy"></script>
 </body>
 </html>
