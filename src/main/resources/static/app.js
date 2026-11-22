@@ -166,7 +166,8 @@ async function downloadTicketPdf(ticket, peopleAhead, generatedAt) {
 
   const isPriority = ticket.ticketType === 'PRIORITY';
   if (isPriority) {
-    const note = 'Para sa PWD / Senior Citizen / Buntis lamang. Ipakita ang valid ID sa counter bago ang serbisyo. WALANG VALID ID? FORFEITED ito — kumuha ng BAGONG REGULAR ticket sa kiosk (sa dulo ng pila). / No valid ID? Forfeited — get a NEW REGULAR ticket at the kiosk (end of the line).';
+    const noteTitle = 'OFFICIAL NOTICE: VALID ID REQUIRED FOR PRIORITY SERVICE';
+    const note = 'Pursuant to R.A. 7277 and R.A. 9994, priority privileges are reserved exclusively for PWDs, Senior Citizens, and pregnant students. Valid government-issued ID or University Clinic endorsement must be presented upon counter summons. Unverified tickets are forfeited pursuant to university queue policy.';
     const noteX = 120;
     const noteY = 838;
     const noteWidth = 960;
@@ -178,9 +179,9 @@ async function downloadTicketPdf(ticket, peopleAhead, generatedAt) {
     context.strokeRect(noteX, noteY, noteWidth, noteHeight);
     context.textAlign = 'left';
     context.fillStyle = '#68460a';
-    context.font = '700 24px Arial, sans-serif';
-    context.fillText('⚠️ ID REQUIRED / KAILANGAN NG VALID ID', noteX + 24, noteY + 38);
-    context.font = '20px Arial, sans-serif';
+    context.font = '700 22px Arial, sans-serif';
+    context.fillText(noteTitle, noteX + 24, noteY + 38);
+    context.font = '19px Arial, sans-serif';
     const words = note.split(/\s+/);
     const lines = [];
     let line = '';
@@ -194,7 +195,7 @@ async function downloadTicketPdf(ticket, peopleAhead, generatedAt) {
       }
     });
     if (line) lines.push(line);
-    lines.forEach((text, index) => context.fillText(text, noteX + 24, noteY + 74 + index * 29));
+    lines.forEach((text, index) => context.fillText(text, noteX + 24, noteY + 72 + index * 28));
   }
 
   const rows = [
@@ -231,7 +232,8 @@ async function downloadTicketPdf(ticket, peopleAhead, generatedAt) {
     ? 'Keep your ticket number and watch the queue display.'
     : 'Abangan ang numero sa monitor. Non-transferable.', 600, 1545);
   context.font = '18px Arial, sans-serif';
-  const finePrint = `Terms: https://heronqueue.onrender.com/terms.html • All transactions are logged • Generated: ${generatedAt}`;
+  const termsUrl = window.location.origin ? `${window.location.origin}/terms.html` : 'https://heronqueue.pages.dev/terms.html';
+  const finePrint = `Terms: ${termsUrl} • All transactions are logged • Generated: ${generatedAt}`;
   const finePrintLines = [];
   let finePrintLine = '';
   finePrint.split(/\s+/).forEach((word) => {
@@ -353,7 +355,8 @@ async function joinQueue(ticketType) {
         : 'Keep your ticket number and watch the queue display.';
     }
     if (receiptFinePrint) {
-      receiptFinePrint.textContent = `Terms: https://heronqueue.onrender.com/terms.html • All transactions are logged • Generated: ${generatedAt}`;
+      const termsUrl = window.location.origin ? `${window.location.origin}/terms.html` : 'https://heronqueue.pages.dev/terms.html';
+      receiptFinePrint.textContent = `Terms: ${termsUrl} • All transactions are logged • Generated: ${generatedAt}`;
     }
     if (receiptCreatedAt) {
       receiptCreatedAt.textContent = parsePhilippineDateTime(ticket.createdAt).toLocaleString('en-PH', {
