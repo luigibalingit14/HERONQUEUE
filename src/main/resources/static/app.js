@@ -1,4 +1,6 @@
-const API_BASE = '/api/queue';
+const API_BASE = (window.location.hostname.endsWith('pages.dev'))
+  ? 'https://heronqueue.onrender.com/api/queue'
+  : '/api/queue';
 const PHILIPPINE_TIME_ZONE = 'Asia/Manila';
 let joiningQueue = false;
 let callingNext = false;
