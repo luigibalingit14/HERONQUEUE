@@ -3,53 +3,287 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>HeronQueue | Terms &amp; Priority-Lane Policy</title>
+  <title>HeronQueue | Terms of Service &amp; Priority Lane Policy</title>
   <link rel="icon" type="image/png" href="assets/logos/umak-logo-black.png">
+  <link rel="apple-touch-icon" href="assets/logos/umak-logo-black.png">
   <link rel="stylesheet" href="assets/theme.css">
-  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,400,0,0">
+  <link rel="stylesheet" href="styles.css?v=20261123-terms">
   <style>
-    .terms-page { color: #222; background: var(--umak-surface); }
-    .terms-page .topbar { color: #fff; background: var(--umak-primary); }
-    .terms-shell { max-width: 900px; margin: auto; padding: 48px 6vw 72px; }
-    .terms-shell h1 { margin: 0 0 12px; color: var(--umak-primary); font-size: clamp(2rem, 5vw, 3.5rem); }
-    .terms-intro { margin: 0 0 28px; color: #68718a; line-height: 1.6; }
-    .terms-list { display: grid; gap: 16px; padding: 0; list-style: none; counter-reset: policy; }
-    .terms-list li { padding: 20px 22px; border: 1px solid rgba(17,28,78,.08); border-radius: 16px; background: #fff; box-shadow: 0 10px 28px rgba(17,28,78,.06); counter-increment: policy; }
-    .terms-list li::before { display: block; margin-bottom: 8px; color: var(--umak-tertiary); font-weight: 800; content: counter(policy) ". POLICY / PATAKARAN"; }
-    .terms-list p { margin: 0; line-height: 1.65; }
-    .terms-list p + p { margin-top: 10px; color: #59627a; }
-    .terms-back { display: inline-block; margin-top: 22px; color: var(--umak-tertiary); font-weight: 700; }
+    .terms-shell {
+      max-width: 960px;
+      margin: 0 auto;
+      padding: 40px 6vw 90px;
+    }
+    .terms-hero {
+      margin-bottom: 36px;
+    }
+    .terms-hero h1 {
+      font-size: clamp(2.2rem, 5vw, 3.4rem);
+      line-height: 1.05;
+      letter-spacing: -0.04em;
+      margin: 12px 0 16px;
+    }
+    .terms-meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 16px;
+      align-items: center;
+      color: var(--text-muted);
+      font-size: 0.85rem;
+      margin-top: 14px;
+      padding-bottom: 24px;
+      border-bottom: 1px solid var(--glass-border);
+    }
+    .terms-section {
+      background: var(--glass);
+      border: 1px solid var(--glass-border);
+      border-radius: 22px;
+      padding: 32px 36px;
+      margin-bottom: 22px;
+      box-shadow: 0 16px 40px rgba(4, 9, 35, 0.3);
+      backdrop-filter: blur(16px);
+    }
+    .terms-section-header {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      margin-bottom: 16px;
+    }
+    .terms-section-num {
+      width: 36px;
+      height: 36px;
+      border-radius: 10px;
+      background: var(--umak-secondary);
+      color: var(--umak-primary);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 900;
+      font-size: 1rem;
+      flex-shrink: 0;
+    }
+    .terms-section-title {
+      font-size: 1.3rem;
+      font-weight: 800;
+      color: #fff;
+      margin: 0;
+      letter-spacing: -0.02em;
+    }
+    .terms-body {
+      color: rgba(220, 230, 255, 0.85);
+      font-size: 0.95rem;
+      line-height: 1.7;
+    }
+    .terms-body p {
+      margin: 0 0 12px;
+    }
+    .terms-body p:last-child {
+      margin-bottom: 0;
+    }
+    .terms-body strong {
+      color: #ffffff;
+    }
+    .tagalog-note {
+      margin-top: 10px;
+      padding: 12px 16px;
+      border-radius: 12px;
+      background: rgba(255, 255, 255, 0.04);
+      border-left: 3px solid var(--umak-secondary);
+      color: var(--text-muted);
+      font-size: 0.88rem;
+      line-height: 1.6;
+    }
+    .law-badge {
+      display: inline-block;
+      padding: 3px 10px;
+      border-radius: 6px;
+      background: rgba(245, 236, 58, 0.15);
+      border: 1px solid rgba(245, 236, 58, 0.35);
+      color: var(--umak-secondary);
+      font-size: 0.76rem;
+      font-weight: 700;
+      letter-spacing: 0.05em;
+      margin-right: 6px;
+    }
+    .terms-nav {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-top: 36px;
+      padding-top: 24px;
+      border-top: 1px solid var(--glass-border);
+      flex-wrap: wrap;
+      gap: 16px;
+    }
+    .btn-return {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 12px 24px;
+      border-radius: 12px;
+      background: var(--umak-secondary);
+      color: var(--umak-primary);
+      font-weight: 800;
+      font-size: 0.9rem;
+      text-decoration: none;
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+    .btn-return:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 10px 25px rgba(245, 236, 58, 0.3);
+    }
+    .btn-ghost {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      color: var(--text-muted);
+      text-decoration: none;
+      font-size: 0.88rem;
+      font-weight: 600;
+    }
+    .btn-ghost:hover {
+      color: #ffffff;
+    }
   </style>
 </head>
-<body class="terms-page">
+<body class="kiosk-page">
   <header class="topbar">
     <div class="brand">
       <img class="brand-logo" src="assets/logos/PNGs/UMak Logo - White R.png" alt="University of Makati logo">
       <span class="brand-copy"><strong>HERONQUEUE</strong><small>University of Makati</small></span>
     </div>
-    <span class="eyebrow">Queue terms</span>
+    <span class="eyebrow">Institutional Policy</span>
   </header>
+
   <main class="terms-shell">
-    <h1>Queue Terms &amp; Priority-Lane Policy</h1>
-    <p class="terms-intro">Please read these rules before getting a ticket. / Basahin ang mga patakaran bago kumuha ng ticket.</p>
-    <ol class="terms-list">
-      <li>
-        <p>The priority lane is only for persons with disabilities (PWD), senior citizens, and pregnant students. / Para lamang sa mga PWD, senior citizen, at buntis na estudyante ang priority lane.</p>
-      </li>
-      <li>
-        <p>Show a valid ID at the counter before service. A ticket is a queue claim, not proof of eligibility. / Ipakita sa counter ang valid ID bago asikasuhin. Katibayan lamang ng puwesto sa pila ang ticket, hindi ito patunay ng eligibility.</p>
-      </li>
-      <li>
-        <p>Without a valid ID, the priority ticket is forfeited. Get a new REGULAR ticket at the kiosk; it joins the end of the line. / Kung walang valid ID, forfeited ang priority ticket. Kumuha ng bagong REGULAR ticket sa kiosk; sa dulo ito ng pila mapupunta.</p>
-      </li>
-      <li>
-        <p>One ticket is for one transaction only and cannot be transferred. All transactions are logged. / Isang ticket para sa isang transaksyon lamang at hindi ito maaaring ipasa sa iba. Nila-log ang lahat ng transaksyon.</p>
-      </li>
-      <li>
-        <p>Public monitors display ticket codes only and do not show personal details. / Mga ticket code lamang ang ipinapakita sa mga monitor; walang personal na detalye.</p>
-      </li>
-    </ol>
-    <a class="terms-back" href="kiosk.html">Back to kiosk / Bumalik sa kiosk</a>
+    <div class="terms-hero">
+      <span class="eyebrow">Governance &amp; Operations Protocol</span>
+      <h1>Terms of Service &amp;<br><span style="color: var(--umak-secondary);">Priority Lane Policy</span></h1>
+      <p class="intro" style="max-width: 780px;">
+        These institutional regulations govern queue ticketing, priority scheduling, and service verification across all University of Makati student transaction counters. All stakeholders agree to adhere to these operational guidelines.
+      </p>
+      <div class="terms-meta">
+        <span><strong>Effective:</strong> Academic Year 2026–2027</span>
+        <span>•</span>
+        <span><strong>Authority:</strong> UMak Student Services &amp; CCIS</span>
+        <span>•</span>
+        <span><strong>System:</strong> HeronQueue Virtual Ticketing Engine</span>
+      </div>
+    </div>
+
+    <!-- Section 1 -->
+    <article class="terms-section">
+      <div class="terms-section-header">
+        <div class="terms-section-num">1</div>
+        <h2 class="terms-section-title">Priority Lane Mandate &amp; Legal Compliance</h2>
+      </div>
+      <div class="terms-body">
+        <p>
+          In strict compliance with Philippine National Laws—including 
+          <span class="law-badge">R.A. 7277 / R.A. 10754</span> (Magna Carta for Persons with Disabilities) and 
+          <span class="law-badge">R.A. 9994</span> (Expanded Senior Citizens Act)—the HeronQueue Priority Lane is dedicated strictly to:
+        </p>
+        <ul style="margin: 0 0 12px 20px; padding: 0;">
+          <li>Students with registered and verified disabilities (PWDs).</li>
+          <li>Senior citizens transacting on behalf of academic requirements.</li>
+          <li>Expectant and heavily pregnant students.</li>
+          <li>Individuals with acute medical conditions authorized by University Health Services.</li>
+        </ul>
+        <div class="tagalog-note">
+          <strong>Patakaran sa Priority Lane:</strong> Alinsunod sa batas ng Pilipinas, ang Priority Lane ay eksklusibo lamang para sa mga PWD, Senior Citizen, buntis, at mga mag-aaral na may opisyal na medical endorsement mula sa Clinic.
+        </div>
+      </div>
+    </article>
+
+    <!-- Section 2 -->
+    <article class="terms-section">
+      <div class="terms-section-header">
+        <div class="terms-section-num">2</div>
+        <h2 class="terms-section-title">Mandatory Credential Presentation &amp; Forfeiture</h2>
+      </div>
+      <div class="terms-body">
+        <p>
+          Possession of a Priority Ticket (e.g., prefix <strong>P-###</strong>) is an operational reservation in the scheduling queue and <strong>does not establish definitive eligibility</strong> until verified in person.
+        </p>
+        <p>
+          Students summoned under a Priority Ticket must present a valid government-issued PWD/Senior ID or an authorized UMak Medical Certificate to the counter staff before transaction processing. Failure to provide qualifying documentation will result in immediate <strong>ticket forfeiture</strong>. The student will be directed to obtain a new <strong>Regular Ticket</strong>, joining the queue at its natural conclusion.
+        </p>
+        <div class="tagalog-note">
+          <strong>Pagpapatunay ng ID:</strong> Ang priority ticket ay numero lamang sa pila at hindi patunay ng kwalipikasyon. Kailangang magpakita ng valid PWD/Senior ID sa counter. Kung walang maipakitang ID, kakanselahin ang priority ticket at kailangang kumuha ng Regular ticket.
+        </div>
+      </div>
+    </article>
+
+    <!-- Section 3 -->
+    <article class="terms-section">
+      <div class="terms-section-header">
+        <div class="terms-section-num">3</div>
+        <h2 class="terms-section-title">Non-Transferability &amp; Single-Transaction Scope</h2>
+      </div>
+      <div class="terms-body">
+        <p>
+          Each issued queue ticket corresponds exclusively to a <strong>single continuous transaction</strong> for the designated claimant. Tickets are non-transferable and may not be bartered, assigned, or shared with peers.
+        </p>
+        <p>
+          A customer who fails to appear after three (3) consecutive public summonses and automated audio callouts shall be flagged as a <strong>No-Show</strong>, releasing the service counter to subsequent patrons.
+        </p>
+        <div class="tagalog-note">
+          <strong>Isang Transaksyon Lamang:</strong> Bawal ipasa, ibenta, o ipahiram ang ticket sa ibang estudyante. Kapag tinawag ng tatlong beses at hindi lumapit sa counter, mamarkahan ito bilang No-Show.
+        </div>
+      </div>
+    </article>
+
+    <!-- Section 4 -->
+    <article class="terms-section">
+      <div class="terms-section-header">
+        <div class="terms-section-num">4</div>
+        <h2 class="terms-section-title">Privacy &amp; Data Protection (R.A. 10173)</h2>
+      </div>
+      <div class="terms-body">
+        <p>
+          In accordance with the <strong>Data Privacy Act of 2012 (R.A. 10173)</strong>, HeronQueue adheres to strict privacy-by-design standards:
+        </p>
+        <ul style="margin: 0 0 12px 20px; padding: 0;">
+          <li>Public displays and monitors broadcast <strong>pseudonymous queue tokens only</strong> (e.g., <em>P-001, R-005</em>).</li>
+          <li>No names, student identification numbers, or medical particulars are rendered on public screens.</li>
+          <li>System logs maintain strictly necessary technical audit metrics for throughput evaluation and fraud prevention.</li>
+        </ul>
+        <div class="tagalog-note">
+          <strong>Seguridad ng Impormasyon:</strong> Alinsunod sa Data Privacy Act, numero lamang ng ticket ang lumalabas sa mga monitor sa lobby upang maprotektahan ang inyong pagkakakilanlan at personal na datos.
+        </div>
+      </div>
+    </article>
+
+    <!-- Section 5 -->
+    <article class="terms-section">
+      <div class="terms-section-header">
+        <div class="terms-section-num">5</div>
+        <h2 class="terms-section-title">Anti-Abuse, Rate Limiting &amp; System Governance</h2>
+      </div>
+      <div class="terms-body">
+        <p>
+          The HeronQueue virtual terminal utilizes automated client-side cooldowns (6-second lockout) and server-side rate limiters to preserve queue integrity and forestall double-submissions.
+        </p>
+        <p>
+          Deliberate ticket hoarding, automated script injection, or disruption of student service operations constitutes a violation of the <strong>University of Makati Student Handbook</strong> and shall be escalated to the Office of Student Affairs and Services (OSAS).
+        </p>
+        <div class="tagalog-note">
+          <strong>Anti-Spam at Integridad:</strong> May awtomatikong proteksyon ang system laban sa sunod-sunod na pagpindot. Ang sinasadyang pag-abuso o pag-spam ng mga ticket ay ipagbibigay-alam sa pamunuan ng unibersidad alinsunod sa Student Handbook.
+        </div>
+      </div>
+    </article>
+
+    <div class="terms-nav">
+      <a href="kiosk.html" class="btn-return">
+        <span class="material-symbols-outlined">arrow_back</span>
+        <span>Return to Student Kiosk</span>
+      </a>
+      <div style="display: flex; gap: 20px; align-items: center;">
+        <a href="index.html" class="btn-ghost">Portal Home</a>
+        <a href="monitor.html" class="btn-ghost">Queue Monitor</a>
+      </div>
+    </div>
   </main>
 </body>
 </html>
