@@ -1,0 +1,199 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>HeronQueue | University of Makati Student Services</title>
+  <link rel="icon" type="image/png" href="assets/logos/umak-logo-black.png">
+  <link rel="apple-touch-icon" href="assets/logos/umak-logo-black.png">
+  <link rel="stylesheet" href="assets/theme.css">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,400,0,0">
+  <link rel="stylesheet" href="styles.css?v=20261122-cloudflare">
+  <style>
+    .portal-shell {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 40px 6vw 80px;
+    }
+    .portal-hero {
+      text-align: center;
+      margin-bottom: 50px;
+    }
+    .portal-cards {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+      gap: 24px;
+    }
+    .portal-card {
+      background: var(--glass);
+      border: 1px solid var(--glass-border);
+      border-radius: 26px;
+      padding: 36px 30px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      transition: transform .35s cubic-bezier(.2,.8,.2,1), border-color .35s, box-shadow .35s;
+      text-decoration: none;
+      color: inherit;
+    }
+    .portal-card:hover {
+      transform: translateY(-8px);
+      border-color: var(--umak-secondary);
+      box-shadow: 0 20px 50px rgba(16, 83, 137, 0.4);
+    }
+    .portal-icon {
+      width: 56px;
+      height: 56px;
+      border-radius: 16px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 32px;
+      margin-bottom: 24px;
+      background: rgba(255, 255, 255, 0.08);
+      color: var(--umak-secondary);
+    }
+    .portal-card.featured .portal-icon {
+      background: var(--umak-secondary);
+      color: var(--umak-primary);
+    }
+    .portal-title {
+      font-size: 1.5rem;
+      font-weight: 800;
+      margin: 0 0 10px 0;
+      color: #fff;
+    }
+    .portal-desc {
+      color: var(--text-muted);
+      font-size: 0.95rem;
+      line-height: 1.6;
+      margin: 0 0 28px 0;
+      flex-grow: 1;
+    }
+    .portal-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      font-weight: 800;
+      font-size: 0.9rem;
+      color: var(--umak-secondary);
+      letter-spacing: 0.04em;
+    }
+    .portal-card.featured {
+      border-color: rgba(245, 236, 58, 0.35);
+      background: linear-gradient(145deg, rgba(255,255,255,0.1), rgba(255,255,255,0.04));
+    }
+    .badge-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: rgba(245, 236, 58, 0.12);
+      border: 1px solid rgba(245, 236, 58, 0.3);
+      color: var(--umak-secondary);
+      padding: 6px 18px;
+      border-radius: 999px;
+      font-size: 0.78rem;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      margin-bottom: 20px;
+    }
+    .portal-footer {
+      margin-top: 60px;
+      padding-top: 30px;
+      border-top: 1px solid var(--glass-border);
+      text-align: center;
+      color: var(--text-muted);
+      font-size: 0.85rem;
+    }
+  </style>
+</head>
+<body class="kiosk-page">
+  <header class="topbar">
+    <div class="brand">
+      <img class="brand-logo" src="assets/logos/PNGs/UMak Logo - White R.png" alt="University of Makati logo">
+      <span class="brand-copy"><strong>HERONQUEUE</strong><small>University of Makati</small></span>
+    </div>
+    <span class="eyebrow">UMak student services portal</span>
+  </header>
+
+  <main class="portal-shell">
+    <div class="portal-hero">
+      <div class="badge-pill">
+        <i class="live-dot"></i> Live Cloud Queue • CCIS DATASTRU 2026
+      </div>
+      <h1 style="margin: 0 auto 16px;">
+        Smart Queue.<br>
+        <span style="color: var(--umak-secondary);">Zero Wait.</span>
+      </h1>
+      <p class="intro" style="margin: 0 auto; max-width: 620px;">
+        HeronQueue is the priority queue-based student services ticketing system of the University of Makati. Powered by a Binary Min-Heap algorithm for fair, instant priority processing.
+      </p>
+    </div>
+
+    <div class="portal-cards">
+      <!-- 1. Kiosk -->
+      <a href="kiosk.html" class="portal-card featured">
+        <div>
+          <div class="portal-icon">
+            <span class="material-symbols-outlined">confirmation_number</span>
+          </div>
+          <h2 class="portal-title">Student Kiosk</h2>
+          <p class="portal-desc">
+            Get your virtual queue ticket in 1 tap from any phone or browser. Choose Regular or Priority (PWD/Senior) lane without paper tickets.
+          </p>
+        </div>
+        <div class="portal-btn">
+          <span>Get in line</span>
+          <span class="material-symbols-outlined">arrow_forward</span>
+        </div>
+      </a>
+
+      <!-- 2. Monitor -->
+      <a href="monitor.html" class="portal-card">
+        <div>
+          <div class="portal-icon">
+            <span class="material-symbols-outlined">tv</span>
+          </div>
+          <h2 class="portal-title">Queue Display</h2>
+          <p class="portal-desc">
+            Public real-time lobby monitor screen. Displays the current serving ticket, waiting count, and live up-next queue.
+          </p>
+        </div>
+        <div class="portal-btn">
+          <span>View display</span>
+          <span class="material-symbols-outlined">arrow_forward</span>
+        </div>
+      </a>
+
+      <!-- 3. Staff -->
+      <a href="staff.html" class="portal-card">
+        <div>
+          <div class="portal-icon">
+            <span class="material-symbols-outlined">badge</span>
+          </div>
+          <h2 class="portal-title">Staff Console</h2>
+          <p class="portal-desc">
+            Operations desk for university staff. Call next tickets with automated voice announcements, recall numbers, and monitor queues.
+          </p>
+        </div>
+        <div class="portal-btn">
+          <span>Open console</span>
+          <span class="material-symbols-outlined">arrow_forward</span>
+        </div>
+      </a>
+    </div>
+
+    <footer class="portal-footer">
+      <div style="display: flex; align-items: center; justify-content: center; gap: 16px; margin-bottom: 12px;">
+        <img src="assets/logos/PNGs/UMak Logo - White R.png" alt="UMak Seal" style="height: 36px;">
+        <img src="assets/logos/PNGs/CCIS-Logo-Official.png" alt="CCIS Seal" style="height: 36px;">
+      </div>
+      <div>University of Makati • College of Computing and Information Sciences</div>
+      <div style="margin-top: 4px; font-size: 0.78rem; opacity: 0.8;">
+        DATASTRU Final Case Study • Team Luigi Balingit • Java 17 • Spring Boot • Cloudflare Pages • Render
+      </div>
+    </footer>
+  </main>
+</body>
+</html>

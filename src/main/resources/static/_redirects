@@ -1,0 +1,3 @@
+# Cloudflare Pages Proxy Rule
+# All API calls are transparently forwarded to the Render Spring Boot backend
+/api/*  https://heronqueue.onrender.com/api/:splat  200

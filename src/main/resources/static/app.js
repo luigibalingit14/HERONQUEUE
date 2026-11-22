@@ -53,12 +53,34 @@ async function request(path, options = {}) {
     ...(options.headers || {})
   };
 
-  // Ipadala ang request sa Spring Boot API; dito rin hinahawakan ang HTTP errors.
-  const response = await fetch(`${API_BASE}${path}`, {
-    cache: 'no-store',
-    ...options,
-    headers
-  });
+  let url = `${API_BASE}${path}`;
+  let response;
+  try {
+    response = await fetch(url, {
+      cache: 'no-store',
+      ...options,
+      headers
+    });
+    // Fallback: If running on Cloudflare Pages and relative proxy returns 404, query Render directly
+    if (response.status === 404 && window.location.hostname.endsWith('pages.dev')) {
+      response = await fetch(`https://heronqueue.onrender.com/api/queue${path}`, {
+        cache: 'no-store',
+        ...options,
+        headers
+      });
+    }
+  } catch (err) {
+    // Network fallback for Cloudflare Pages
+    if (window.location.hostname.endsWith('pages.dev')) {
+      response = await fetch(`https://heronqueue.onrender.com/api/queue${path}`, {
+        cache: 'no-store',
+        ...options,
+        headers
+      });
+    } else {
+      throw err;
+    }
+  }
 
   if (!response.ok) {
     const body = await response.text();
